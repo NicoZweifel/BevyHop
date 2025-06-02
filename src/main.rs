@@ -56,6 +56,7 @@ fn scroll_events(mut evr_scroll: EventReader<MouseWheel>) {
 
 fn main() {
     App::new()
+        .insert_resource(Time::<Fixed>::from_hz(128.0))
         .register_type::<Character>()
         .register_type::<TransformInterpolation>()
         .register_type::<RigidBody>()
@@ -137,7 +138,7 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
     let height = 3.0;
     let logical_entity = commands
         .spawn((
-            Collider::cylinder(0.2, height),
+            Collider::cylinder(1.0, height),
             // A capsule can be used but is NOT recommended
             // If you use it, you have to make sure each segment point is
             // equidistant from the translation of the player transform
@@ -166,8 +167,10 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
                 ..default()
             },
             FpsController {
-                air_acceleration: 40.0,
-                max_air_speed: 100.,
+                air_acceleration: 60.,
+                max_air_speed: 60.,
+                air_speed_cap: 2.5,
+                friction: 10.,
                 ..default()
             },
         ))
