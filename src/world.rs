@@ -4,6 +4,7 @@ use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy::gltf::Gltf;
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::ParticleEffect;
+use std::f32::consts::TAU;
 
 use crate::core::*;
 
@@ -13,7 +14,12 @@ impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (spawn_world, scene_colliders, cleanup_timed::<SpeedBoost>),
+            (
+                spawn_world,
+                scene_colliders,
+                cleanup_timed::<SpeedBoost>,
+                rotate,
+            ),
         )
         .add_systems(Startup, setup)
         .add_observer(
@@ -118,50 +124,14 @@ fn scene_colliders(
             .insert((
                 CollisionLayers::new(CollisionLayer::Boost, [CollisionLayer::Player]),
                 ColliderConstructor::ConvexHullFromMesh,
-                RigidBody::Dynamic,
                 CollisionEventsEnabled,
-                Sleeping,
-                LinearVelocity::ZERO,
-                Dominance(1),
-                AngularVelocity::ZERO,
-                GravityScale(0.),
             ))
-            .observe(
-                |trigger: Trigger<OnCollisionEnd>,
-                 mut cmd: Commands,
-                 q_gtf: Query<&GlobalTransform>,
-                 effects: Res<ParticleEffects>,
-                 mut q_player: Query<&mut LinearVelocity, With<LogicalPlayer>>| {
-                    let boost = trigger.target();
-
-                    let other_entity = trigger.collider;
-
-                    let Ok(mut player) = q_player.get_mut(other_entity) else {
-                        return;
-                    };
-
-                    player.0 *= Vec3::splat(1.2);
-
-                    cmd.entity(boost).despawn();
-
-                    let Ok(gtf) = q_gtf.get(boost) else {
-                        return;
-                    };
-
-                    cmd.spawn((
-                        ParticleEffect::new(effects.boost_effect.clone()),
-                        Transform::from_translation(gtf.translation()),
-                        Lifetime {
-                            timer: Timer::from_seconds(2., TimerMode::Once),
-                        },
-                    ));
-                },
-            )
+            .observe(boost_collision)
             .with_child(ParticleEffect::new(effects.boost_idle_effect.clone()))
             .with_child(PointLight {
-                color: Color::srgba(0.283153, 0.708391, 0.141266, 1.),
-                radius: 0.4,
-                intensity: 10_000_000.0,
+                color: Color::srgba(0.283153, 0.708391, 0.141266, 0.5),
+                radius: 2.0,
+                intensity: 5_000_000.0,
                 ..default()
             });
     }
@@ -174,5 +144,43 @@ fn scene_colliders(
             ColliderConstructor::TrimeshFromMesh,
             RigidBody::Static,
         ));
+    }
+}
+
+fn boost_collision(
+    trigger: Trigger<OnCollisionEnd>,
+    mut cmd: Commands,
+    q_gtf: Query<&GlobalTransform>,
+    effects: Res<ParticleEffects>,
+    mut q_player: Query<&mut LinearVelocity, With<LogicalPlayer>>,
+) {
+    let boost = trigger.target();
+
+    let other_entity = trigger.collider;
+
+    let Ok(mut player) = q_player.get_mut(other_entity) else {
+        return;
+    };
+
+    player.0 *= Vec3::splat(1.5);
+
+    let Ok(gtf) = q_gtf.get(boost) else {
+        return;
+    };
+
+    cmd.spawn((
+        ParticleEffect::new(effects.boost_effect.clone()),
+        Transform::from_translation(gtf.translation()),
+        Lifetime {
+            timer: Timer::from_seconds(2., TimerMode::Once),
+        },
+    ));
+}
+
+fn rotate(mut cubes: Query<&mut Transform, With<SpeedBoost>>, timer: Res<Time>) {
+    for mut transform in &mut cubes {
+        transform.rotate_x(0.1 * TAU * timer.delta_secs());
+        transform.rotate_z(0.1 * TAU * timer.delta_secs());
+        transform.rotate_y(0.5 * TAU * timer.delta_secs());
     }
 }

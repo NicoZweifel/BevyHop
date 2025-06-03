@@ -22,7 +22,7 @@ pub(crate) fn setup(mut cmd: Commands, mut effects: ResMut<Assets<EffectAsset>>)
 pub(crate) fn setup_boost_effect() -> EffectAsset {
     let mut color_gradient1 = Gradient::new();
 
-    color_gradient1.add_key(0.0, Vec4::new(0.283153, 0.708391, 0.141266, 1.0));
+    color_gradient1.add_key(0.0, Vec4::new(0.283153, 0.708391, 0.141266, 0.8));
     color_gradient1.add_key(0.5, Vec4::new(0.14, 0.35, 0.07, 0.5));
     color_gradient1.add_key(1.0, Vec4::new(0.0, 0.1, 0., 0.0));
 
@@ -102,7 +102,7 @@ pub(crate) fn setup_boost_effect() -> EffectAsset {
 pub(crate) fn setup_boost_idle_effect() -> EffectAsset {
     let mut color_gradient1 = Gradient::new();
 
-    color_gradient1.add_key(0.0, Vec4::new(0.283153, 0.708391, 0.141266, 1.0));
+    color_gradient1.add_key(0.0, Vec4::new(0.283153, 0.708391, 0.141266, 0.5));
     color_gradient1.add_key(0.5, Vec4::new(0.14, 0.35, 0.07, 0.5));
     color_gradient1.add_key(1.0, Vec4::new(0.0, 0.1, 0., 0.0));
 
@@ -129,7 +129,7 @@ pub(crate) fn setup_boost_idle_effect() -> EffectAsset {
 
     let init_pos = SetPositionSphereModifier {
         center: writer.lit(Vec3::ZERO).expr(),
-        radius: writer.lit(2.).expr(),
+        radius: writer.lit(1.5).expr(),
         dimension: ShapeDimension::Volume,
     };
 
@@ -151,14 +151,14 @@ pub(crate) fn setup_boost_idle_effect() -> EffectAsset {
 
     let orient = OrientModifier::new(OrientMode::ParallelCameraDepthPlane);
 
-    let spawner = SpawnerSettings::burst(24.0.into(), 0.1.into());
+    let spawner = SpawnerSettings::burst(6.0.into(), 0.1.into());
 
     let mut module = writer.finish();
 
     let tangent_accel =
-        TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(0., -1., -1.), 60.);
+        TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(0., -1., -1.), 20.);
 
-    EffectAsset::new(2048, spawner, module)
+    EffectAsset::new(512, spawner, module)
         .with_name("boost_idle_effect")
         .with_simulation_space(SimulationSpace::Local)
         .init(init_pos)

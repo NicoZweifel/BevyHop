@@ -107,7 +107,7 @@ fn setup(mut cmd: Commands) {
     ));
 }
 
-fn respawn(mut query: Query<(&mut Transform, &mut LinearVelocity)>) {
+fn respawn(mut query: Query<(&mut Transform, &mut LinearVelocity), With<LogicalPlayer>>) {
     for (mut transform, mut velocity) in &mut query {
         if transform.translation.y > -50.0 {
             continue;
