@@ -1,5 +1,5 @@
 [package]
-name = "jam"
+name = "bevy_hop"
 version = "0.1.0"
 edition = "2024"
 
@@ -9,6 +9,7 @@ bevy_skein = "0.2.0"
 bevy_fps_controller = { path = "../nz_bevy_fps_controller",features=['avian'] }
 avian3d = "0.3.0"
 avian_pickup = "0.2.0"
+bevy_hanabi = "0.16.0"
 
 # Set max log levels. This helps avoid unwanted low-severity log spam, which can affect performance.
 log = { version = "0.4", features = [
