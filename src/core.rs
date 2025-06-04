@@ -1,12 +1,41 @@
+use std::marker::PhantomData;
+
 use avian3d::{PhysicsPlugins, prelude::*};
 use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::EffectAsset;
 use bevy_skein::SkeinPlugin;
+
+use crate::state::*;
 
 pub const SPAWN_OFFSET: Vec3 = Vec3::new(0.0, 8., 0.0);
 
 #[derive(Event)]
-pub struct Respawn(pub Vec3);
+pub struct SpawnLevel(pub usize);
+
+#[derive(Event)]
+pub struct Respawn<S: Component> {
+    pub translation: Vec3,
+    _marker: PhantomData<S>,
+}
+
+impl<S: Component> Respawn<S> {
+    pub fn new(translation: Vec3) -> Respawn<S> {
+        Self {
+            translation,
+            ..default()
+        }
+    }
+}
+
+impl<S: Component> Default for Respawn<S> {
+    fn default() -> Self {
+        Self {
+            translation: default(),
+            _marker: default(),
+        }
+    }
+}
 
 #[derive(Debug, PhysicsLayer, Default)]
 pub enum CollisionLayer {
@@ -22,6 +51,10 @@ pub enum CollisionLayer {
 pub struct Character {
     name: String,
 }
+
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+pub struct Ready;
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
@@ -63,53 +96,123 @@ pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            DefaultPlugins.set(AssetPlugin {
-                // Wasm builds will check for meta files (that don't exist) if this isn't set.
-                // This causes errors and even panics in web builds on itch.
-                // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
-                meta_check: AssetMetaCheck::Never,
-                ..default()
-            }),
-            SkeinPlugin::default(),
-            PhysicsPlugins::default(),
-            PhysicsDebugPlugin::default(),
-        ))
-        .insert_resource(Time::<Fixed>::from_hz(128.0))
-        .insert_resource(History::default())
-        .register_type::<Character>()
-        .register_type::<TransformInterpolation>()
-        .register_type::<RigidBody>()
-        .register_type::<ColliderConstructor>()
-        .register_type::<CheckPoint>()
-        .register_type::<End>()
-        .register_type::<SpeedBoost>()
-        .register_type::<Ground>()
-        .register_type::<Prop>()
-        .add_event::<Respawn>();
+        app.add_event::<SpawnLevel>()
+            .insert_resource(Time::<Fixed>::from_hz(128.0))
+            .insert_resource(History::default())
+            .register_type::<Prop>()
+            .register_type::<Character>()
+            .register_type::<TransformInterpolation>()
+            .register_type::<RigidBody>()
+            .register_type::<ColliderConstructor>()
+            .register_type::<CheckPoint>()
+            .register_type::<End>()
+            .register_type::<SpeedBoost>()
+            .register_type::<Ground>()
+            .add_plugins((
+                DefaultPlugins.set(AssetPlugin {
+                    // Wasm builds will check for meta files (that don't exist) if this isn't set.
+                    // This causes errors and even panics in web builds on itch.
+                    // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
+                    meta_check: AssetMetaCheck::Never,
+                    ..default()
+                }),
+                SkeinPlugin::default(),
+                PhysicsPlugins::default(),
+                PhysicsDebugPlugin::default(),
+                UnitPlugin::<Prop>::default(),
+                UnitPlugin::<LogicalPlayer>::default(),
+            ));
+    }
+}
+
+pub struct UnitPlugin<S> {
+    _marker: PhantomData<S>,
+}
+
+impl<S: Component> Default for UnitPlugin<S> {
+    fn default() -> Self {
+        Self {
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<S: Component> Plugin for UnitPlugin<S> {
+    fn build(&self, app: &mut App) {
+        app.add_event::<Respawn<S>>()
+            .add_systems(
+                FixedUpdate,
+                (out_of_bounds::<S>, respawn::<S>)
+                    .chain()
+                    .in_set(GameplaySet),
+            )
+            .add_systems(OnExit(AppState::InGame), cleanup::<S>.after(teardown::<S>));
     }
 }
 
 pub fn cleanup_timed<S: Component>(
-    mut commands: Commands,
-    mut q_values: Query<(Entity, &mut Lifetime), With<S>>,
-    time: Res<Time>,
+    mut cmd: Commands,
+    mut q: Query<(Entity, &mut Lifetime), With<S>>,
+    t: Res<Time>,
 ) {
-    for (entity, mut lifetime) in &mut q_values {
-        lifetime.timer.tick(time.delta());
+    for (entity, mut lifetime) in &mut q {
+        lifetime.timer.tick(t.delta());
         if !lifetime.timer.just_finished() {
             continue;
         }
-        commands.entity(entity).despawn();
+        cmd.entity(entity).despawn();
     }
 }
 
-pub fn teardown<S: Component>(mut cmd: Commands, menu: Single<Entity, With<S>>) {
-    cmd.entity(menu.into_inner()).despawn();
+pub fn teardown<S: Component>(mut cmd: Commands, e: Single<Entity, With<S>>) {
+    cmd.entity(e.into_inner()).despawn();
 }
 
 pub fn cleanup<S: Component>(mut cmd: Commands, q: Query<Entity, With<S>>) {
     for x in &q {
         cmd.entity(x).despawn();
+    }
+}
+
+pub fn respawn<S: Component>(
+    mut q: Query<(&mut Transform, &mut LinearVelocity), With<S>>,
+    mut er: EventReader<Respawn<S>>,
+) {
+    for e in er.read() {
+        let spawn_point = e.translation + SPAWN_OFFSET;
+
+        for (mut transform, mut velocity) in &mut q {
+            velocity.0 = Vec3::ZERO;
+            transform.translation = spawn_point
+        }
+    }
+}
+
+fn out_of_bounds<S: Component>(
+    q: Query<&Transform, With<S>>,
+    history: Res<History>,
+    q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
+
+    mut er: EventWriter<Respawn<S>>,
+) {
+    let spawn_point = if let Some(check_point) = history.0.last() {
+        if let Ok(gtf) = q_gtf.get(*check_point) {
+            gtf.translation()
+        } else {
+            Vec3::ZERO
+        }
+    } else {
+        Vec3::ZERO
+    };
+
+    for transform in &q {
+        if (spawn_point.y - transform.translation.y).abs() < 100. {
+            continue;
+        }
+
+        er.write(Respawn::<S> {
+            translation: spawn_point,
+            ..default()
+        });
     }
 }

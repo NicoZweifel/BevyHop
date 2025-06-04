@@ -42,6 +42,7 @@ struct Hud;
 fn setup_hud(mut cmd: Commands, assets: Res<AssetServer>) {
     cmd.spawn((
         Text(String::from("")),
+        Hud,
         TextFont {
             font: assets.load("fira_mono.ttf"),
             font_size: 24.0,

@@ -1,12 +1,6 @@
 use avian3d::prelude::{Physics, PhysicsGizmos, PhysicsTime};
 use bevy::prelude::*;
 
-#[derive(Event)]
-pub struct PauseToggle;
-
-#[derive(Event)]
-pub struct DebugToggle;
-
 pub struct StatePlugin;
 
 impl Plugin for StatePlugin {
@@ -36,13 +30,10 @@ impl Plugin for StatePlugin {
         .init_state::<GameModeState>()
         .init_state::<PausedState>()
         .init_state::<DebugState>()
-        .add_event::<DebugToggle>()
-        .add_event::<PauseToggle>()
         .add_systems(OnEnter(PausedState::Paused), pause_physics)
         .add_systems(OnEnter(PausedState::Running), resume_physics)
         .add_systems(OnEnter(DebugState::Enabled), start_physics_debug)
-        .add_systems(OnEnter(DebugState::Disabled), stop_physics_debug)
-        .add_systems(FixedUpdate, (toggle_pause, toggle_debug));
+        .add_systems(OnEnter(DebugState::Disabled), stop_physics_debug);
     }
 }
 
@@ -87,19 +78,6 @@ pub enum DebugState {
     Enabled,
 }
 
-fn toggle_pause(
-    s: Res<State<PausedState>>,
-    mut ns: ResMut<NextState<PausedState>>,
-    mut er: EventReader<PauseToggle>,
-) {
-    for _ in er.read() {
-        ns.set(match s.get() {
-            PausedState::Paused => PausedState::Running,
-            PausedState::Running => PausedState::Paused,
-        })
-    }
-}
-
 fn pause_physics(mut time: ResMut<Time<Physics>>) {
     time.pause();
 }
@@ -116,17 +94,4 @@ fn start_physics_debug(mut store: ResMut<GizmoConfigStore>) {
 fn stop_physics_debug(mut store: ResMut<GizmoConfigStore>) {
     let cfg = store.config_mut::<PhysicsGizmos>();
     cfg.0.enabled = false;
-}
-
-fn toggle_debug(
-    s: Res<State<DebugState>>,
-    mut ns: ResMut<NextState<DebugState>>,
-    mut er: EventReader<DebugToggle>,
-) {
-    for _ in er.read() {
-        ns.set(match s.get() {
-            DebugState::Disabled => DebugState::Enabled,
-            DebugState::Enabled => DebugState::Disabled,
-        })
-    }
 }

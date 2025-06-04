@@ -1,11 +1,8 @@
-use crate::{
-    core::*,
-    state::{AppState, GameplaySet},
-};
+use crate::{core::*, state::*};
 
 use std::f32::consts::TAU;
 
-use avian_pickup::actor::{AvianPickupActor, AvianPickupActorHoldConfig};
+use avian_pickup::actor::*;
 use avian3d::prelude::*;
 use bevy::{
     pbr::{NotShadowCaster, NotShadowReceiver},
@@ -22,10 +19,6 @@ impl Plugin for PlayerPlugin {
             .add_systems(
                 OnExit(AppState::InGame),
                 (teardown::<LogicalPlayer>, teardown::<RenderPlayer>),
-            )
-            .add_systems(
-                FixedUpdate,
-                (respawn_fallen_off, respawn).chain().in_set(GameplaySet),
             );
     }
 }
@@ -104,64 +97,27 @@ fn setup(mut cmd: Commands) {
         RenderPlayer { logical_entity },
         Visibility::Visible,
         AvianPickupActor {
-            interaction_distance: 7.,
+            interaction_distance: 5.,
+
             prop_filter: SpatialQueryFilter::from_mask([
                 CollisionLayer::Prop,
                 CollisionLayer::Boost,
             ]),
+
             actor_filter: SpatialQueryFilter::from_mask(CollisionLayer::Player),
             obstacle_filter: SpatialQueryFilter::from_mask(CollisionLayer::Default),
+            throw: AvianPickupActorThrowConfig {
+                linear_speed_range: 0.0..=10.0,
+                ..default()
+            },
             hold: AvianPickupActorHoldConfig {
                 // Make sure the prop is far enough away from
                 // our collider when looking straight down
                 pitch_range: -50.0_f32.to_radians()..=75.0_f32.to_radians(),
+                preferred_distance: 2.,
                 ..default()
             },
             ..default()
         },
     ));
-}
-
-pub fn respawn(
-    mut query: Query<(&mut Transform, &mut LinearVelocity), With<LogicalPlayer>>,
-    mut er: EventReader<Respawn>,
-) {
-    for e in er.read() {
-        let spawn_point = e.0 + SPAWN_OFFSET;
-
-        for (mut transform, mut velocity) in &mut query {
-            if (spawn_point.y - transform.translation.y).abs() < 100. {
-                continue;
-            }
-
-            velocity.0 = Vec3::ZERO;
-            transform.translation = spawn_point
-        }
-    }
-}
-
-fn respawn_fallen_off(
-    query: Query<&Transform, With<LogicalPlayer>>,
-    history: Res<History>,
-    q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
-
-    mut er: EventWriter<Respawn>,
-) {
-    let spawn_point = if let Some(check_point) = history.0.last() {
-        if let Ok(gtf) = q_gtf.get(*check_point) {
-            gtf.translation()
-        } else {
-            Vec3::ZERO
-        }
-    } else {
-        Vec3::ZERO
-    };
-
-    for transform in &query {
-        if (spawn_point.y - transform.translation.y).abs() < 100. {
-            continue;
-        }
-
-        er.write(Respawn(spawn_point));
-    }
 }

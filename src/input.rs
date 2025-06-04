@@ -4,11 +4,7 @@ use bevy_fps_controller::controller::*;
 
 use avian_pickup::prelude::*;
 
-use crate::{
-    core::Respawn,
-    player::respawn,
-    state::{GameplaySet, PausedState},
-};
+use crate::{core::*, state::*};
 
 pub struct InputPlugin;
 
@@ -17,7 +13,12 @@ impl Plugin for InputPlugin {
         app.add_plugins((AvianPickupPlugin::default(), FpsControllerPlugin))
             .add_systems(
                 Update,
-                (manage_cursor, scroll_events, handle_reset.before(respawn)).in_set(GameplaySet),
+                (
+                    manage_cursor,
+                    scroll_events,
+                    handle_reset.before(respawn::<LogicalPlayer>),
+                )
+                    .in_set(GameplaySet),
             )
             .add_systems(
                 RunFixedMainLoop,
@@ -105,8 +106,27 @@ fn handle_input(
     }
 }
 
-fn handle_reset(keys: Res<ButtonInput<KeyCode>>, mut ew: EventWriter<Respawn>) {
+fn handle_reset(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut ew: EventWriter<Respawn<LogicalPlayer>>,
+    mut history: ResMut<History>,
+    q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
+) {
     if keys.just_pressed(KeyCode::KeyR) {
-        ew.write(Respawn(Vec3::ZERO));
+        if keys.pressed(KeyCode::ShiftLeft) {
+            history.0.clear();
+        };
+
+        let spawn_point = if let Some(check_point) = history.0.last() {
+            if let Ok(gtf) = q_gtf.get(*check_point) {
+                gtf.translation()
+            } else {
+                Vec3::ZERO
+            }
+        } else {
+            Vec3::ZERO
+        };
+
+        ew.write(Respawn::<LogicalPlayer>::new(spawn_point));
     }
 }
