@@ -5,6 +5,9 @@ use bevy_skein::SkeinPlugin;
 
 pub const SPAWN_OFFSET: Vec3 = Vec3::new(0.0, 8., 0.0);
 
+#[derive(Event)]
+pub struct Respawn(pub Vec3);
+
 #[derive(Debug, PhysicsLayer, Default)]
 pub enum CollisionLayer {
     #[default]
@@ -70,7 +73,7 @@ impl Plugin for CorePlugin {
             }),
             SkeinPlugin::default(),
             PhysicsPlugins::default(),
-            // PhysicsDebugPlugin::default(),
+            PhysicsDebugPlugin::default(),
         ))
         .insert_resource(Time::<Fixed>::from_hz(128.0))
         .insert_resource(History::default())
@@ -82,7 +85,8 @@ impl Plugin for CorePlugin {
         .register_type::<End>()
         .register_type::<SpeedBoost>()
         .register_type::<Ground>()
-        .register_type::<Prop>();
+        .register_type::<Prop>()
+        .add_event::<Respawn>();
     }
 }
 
@@ -93,9 +97,19 @@ pub fn cleanup_timed<S: Component>(
 ) {
     for (entity, mut lifetime) in &mut q_values {
         lifetime.timer.tick(time.delta());
-        if !lifetime.timer.just_finished() || commands.get_entity(entity).is_err() {
+        if !lifetime.timer.just_finished() {
             continue;
         }
         commands.entity(entity).despawn();
+    }
+}
+
+pub fn teardown<S: Component>(mut cmd: Commands, menu: Single<Entity, With<S>>) {
+    cmd.entity(menu.into_inner()).despawn();
+}
+
+pub fn cleanup<S: Component>(mut cmd: Commands, q: Query<Entity, With<S>>) {
+    for x in &q {
+        cmd.entity(x).despawn();
     }
 }

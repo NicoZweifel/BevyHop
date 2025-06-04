@@ -1,4 +1,7 @@
-use crate::core::*;
+use crate::{
+    core::*,
+    state::{AppState, GameplaySet},
+};
 
 use std::f32::consts::TAU;
 
@@ -15,7 +18,15 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup).add_systems(Update, respawn);
+        app.add_systems(OnEnter(AppState::InGame), setup)
+            .add_systems(
+                OnExit(AppState::InGame),
+                (teardown::<LogicalPlayer>, teardown::<RenderPlayer>),
+            )
+            .add_systems(
+                FixedUpdate,
+                (respawn_fallen_off, respawn).chain().in_set(GameplaySet),
+            );
     }
 }
 
@@ -56,7 +67,10 @@ fn setup(mut cmd: Commands) {
                 GravityScale(0.0),
                 Dominance(5),
             ),
-            Transform::from_translation(SPAWN_OFFSET),
+            (
+                Visibility::Visible,
+                Transform::from_translation(SPAWN_OFFSET),
+            ),
             LogicalPlayer,
             (NotShadowCaster, NotShadowReceiver),
             (
@@ -88,6 +102,7 @@ fn setup(mut cmd: Commands) {
         }),
         Exposure::SUNLIGHT,
         RenderPlayer { logical_entity },
+        Visibility::Visible,
         AvianPickupActor {
             interaction_distance: 7.,
             prop_filter: SpatialQueryFilter::from_mask([
@@ -107,27 +122,46 @@ fn setup(mut cmd: Commands) {
     ));
 }
 
-fn respawn(
+pub fn respawn(
     mut query: Query<(&mut Transform, &mut LinearVelocity), With<LogicalPlayer>>,
+    mut er: EventReader<Respawn>,
+) {
+    for e in er.read() {
+        let spawn_point = e.0 + SPAWN_OFFSET;
+
+        for (mut transform, mut velocity) in &mut query {
+            if (spawn_point.y - transform.translation.y).abs() < 100. {
+                continue;
+            }
+
+            velocity.0 = Vec3::ZERO;
+            transform.translation = spawn_point
+        }
+    }
+}
+
+fn respawn_fallen_off(
+    query: Query<&Transform, With<LogicalPlayer>>,
     history: Res<History>,
     q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
+
+    mut er: EventWriter<Respawn>,
 ) {
     let spawn_point = if let Some(check_point) = history.0.last() {
         if let Ok(gtf) = q_gtf.get(*check_point) {
-            gtf.translation() + SPAWN_OFFSET
+            gtf.translation()
         } else {
-            SPAWN_OFFSET
+            Vec3::ZERO
         }
     } else {
-        SPAWN_OFFSET
+        Vec3::ZERO
     };
 
-    for (mut transform, mut velocity) in &mut query {
+    for transform in &query {
         if (spawn_point.y - transform.translation.y).abs() < 100. {
             continue;
         }
 
-        velocity.0 = Vec3::ZERO;
-        transform.translation = spawn_point
+        er.write(Respawn(spawn_point));
     }
 }

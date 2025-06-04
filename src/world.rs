@@ -7,6 +7,7 @@ use bevy_hanabi::ParticleEffect;
 use std::f32::consts::TAU;
 
 use crate::core::*;
+use crate::state::GameplaySet;
 
 pub struct WorldPlugin;
 
@@ -19,11 +20,11 @@ impl Plugin for WorldPlugin {
                 scene_colliders,
                 cleanup_timed::<SpeedBoost>,
                 rotate,
-            ),
+            )
+                .in_set(GameplaySet),
         )
         .add_systems(Startup, setup)
         .add_observer(
-            // log the component from the gltf spawn
             |trigger: Trigger<SceneInstanceReady>,
              children: Query<&Children>,
              characters: Query<&Character>| {
@@ -163,7 +164,7 @@ fn scene_colliders(
                  q_player: Query<&GlobalTransform, With<LogicalPlayer>>| {
                     let other_entity = trigger.collider;
 
-                    let Ok(target_gtf) = q_target.get(other_entity) else {
+                    let Ok(target_gtf) = q_target.get(trigger.target()) else {
                         return;
                     };
 
@@ -191,7 +192,7 @@ fn scene_colliders(
              mut main_scene: ResMut<MainScene>| {
                 let other_entity = trigger.collider;
 
-                let Ok(target_gtf) = q_target.get(other_entity) else {
+                let Ok(target_gtf) = q_target.get(trigger.target()) else {
                     return;
                 };
 

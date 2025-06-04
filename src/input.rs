@@ -2,10 +2,12 @@ use bevy::{input::mouse::MouseWheel, prelude::*, window::CursorGrabMode};
 
 use bevy_fps_controller::controller::*;
 
-use avian_pickup::{
-    AvianPickupPlugin,
-    actor::AvianPickupActor,
-    input::{AvianPickupAction, AvianPickupInput},
+use avian_pickup::prelude::*;
+
+use crate::{
+    core::Respawn,
+    player::respawn,
+    state::{GameplaySet, PausedState},
 };
 
 pub struct InputPlugin;
@@ -13,10 +15,15 @@ pub struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((AvianPickupPlugin::default(), FpsControllerPlugin))
-            .add_systems(Update, (manage_cursor, scroll_events))
+            .add_systems(
+                Update,
+                (manage_cursor, scroll_events, handle_reset.before(respawn)).in_set(GameplaySet),
+            )
             .add_systems(
                 RunFixedMainLoop,
-                handle_input.in_set(RunFixedMainLoopSystem::BeforeFixedMainLoop),
+                handle_input
+                    .in_set(RunFixedMainLoopSystem::BeforeFixedMainLoop)
+                    .in_set(GameplaySet),
             );
     }
 }
@@ -26,6 +33,7 @@ fn manage_cursor(
     key: Res<ButtonInput<KeyCode>>,
     mut window_query: Query<&mut Window>,
     mut controller_query: Query<&mut FpsController>,
+    mut ns: ResMut<NextState<PausedState>>,
 ) {
     for mut window in &mut window_query {
         if btn.just_pressed(MouseButton::Left) {
@@ -35,19 +43,22 @@ fn manage_cursor(
                 controller.enable_input = true;
             }
         }
+
         if key.just_pressed(KeyCode::Escape) {
             window.cursor_options.grab_mode = CursorGrabMode::None;
             window.cursor_options.visible = true;
             for mut controller in &mut controller_query {
                 controller.enable_input = false;
             }
+
+            ns.set(PausedState::Paused);
         }
     }
 }
 
-fn scroll_events(mut evr_scroll: EventReader<MouseWheel>) {
+fn scroll_events(mut er: EventReader<MouseWheel>) {
     use bevy::input::mouse::MouseScrollUnit;
-    for ev in evr_scroll.read() {
+    for ev in er.read() {
         match ev.unit {
             MouseScrollUnit::Line => {
                 println!(
@@ -65,30 +76,37 @@ fn scroll_events(mut evr_scroll: EventReader<MouseWheel>) {
     }
 }
 
-/// Pass player input along to `avian_pickup`
 fn handle_input(
-    mut avian_pickup_input_writer: EventWriter<AvianPickupInput>,
-    key_input: Res<ButtonInput<MouseButton>>,
+    mut ew: EventWriter<AvianPickupInput>,
+    keys: Res<ButtonInput<MouseButton>>,
     actors: Query<Entity, With<AvianPickupActor>>,
 ) {
     for actor in &actors {
-        if key_input.just_pressed(MouseButton::Left) {
-            avian_pickup_input_writer.write(AvianPickupInput {
+        if keys.just_pressed(MouseButton::Left) {
+            ew.write(AvianPickupInput {
                 action: AvianPickupAction::Throw,
                 actor,
             });
         }
-        if key_input.just_pressed(MouseButton::Right) {
-            avian_pickup_input_writer.write(AvianPickupInput {
+        if keys.just_pressed(MouseButton::Right) {
+            ew.write(AvianPickupInput {
                 action: AvianPickupAction::Drop,
                 actor,
             });
         }
-        if key_input.pressed(MouseButton::Right) {
-            avian_pickup_input_writer.write(AvianPickupInput {
+        if keys.pressed(MouseButton::Right) {
+            ew.write(AvianPickupInput {
                 action: AvianPickupAction::Pull,
                 actor,
             });
         }
+
+        if keys.pressed(MouseButton::Right) {}
+    }
+}
+
+fn handle_reset(keys: Res<ButtonInput<KeyCode>>, mut ew: EventWriter<Respawn>) {
+    if keys.just_pressed(KeyCode::KeyR) {
+        ew.write(Respawn(Vec3::ZERO));
     }
 }
