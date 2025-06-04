@@ -3,7 +3,7 @@ use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_hanabi::EffectAsset;
 use bevy_skein::SkeinPlugin;
 
-pub const SPAWN_POINT: Vec3 = Vec3::new(0.0, 8., 0.0);
+pub const SPAWN_OFFSET: Vec3 = Vec3::new(0.0, 8., 0.0);
 
 #[derive(Debug, PhysicsLayer, Default)]
 pub enum CollisionLayer {
@@ -34,10 +34,13 @@ pub struct CheckPoint;
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
-pub struct SpeedBoost(pub f32);
+pub struct End;
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
+pub struct SpeedBoost(pub f32);
+
+#[derive(Resource, Reflect, Debug, Default)]
 pub struct History(pub Vec<Entity>);
 
 #[derive(Component, Reflect, Default)]
@@ -50,6 +53,7 @@ pub struct Lifetime {
 pub struct ParticleEffects {
     pub boost_effect: Handle<EffectAsset>,
     pub boost_idle_effect: Handle<EffectAsset>,
+    pub player_boost_effect: Handle<EffectAsset>,
 }
 
 pub struct CorePlugin;
@@ -69,11 +73,13 @@ impl Plugin for CorePlugin {
             // PhysicsDebugPlugin::default(),
         ))
         .insert_resource(Time::<Fixed>::from_hz(128.0))
+        .insert_resource(History::default())
         .register_type::<Character>()
         .register_type::<TransformInterpolation>()
         .register_type::<RigidBody>()
         .register_type::<ColliderConstructor>()
         .register_type::<CheckPoint>()
+        .register_type::<End>()
         .register_type::<SpeedBoost>()
         .register_type::<Ground>()
         .register_type::<Prop>();

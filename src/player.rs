@@ -56,7 +56,7 @@ fn setup(mut cmd: Commands) {
                 GravityScale(0.0),
                 Dominance(5),
             ),
-            Transform::from_translation(SPAWN_POINT),
+            Transform::from_translation(SPAWN_OFFSET),
             LogicalPlayer,
             (NotShadowCaster, NotShadowReceiver),
             (
@@ -107,13 +107,27 @@ fn setup(mut cmd: Commands) {
     ));
 }
 
-fn respawn(mut query: Query<(&mut Transform, &mut LinearVelocity), With<LogicalPlayer>>) {
+fn respawn(
+    mut query: Query<(&mut Transform, &mut LinearVelocity), With<LogicalPlayer>>,
+    history: Res<History>,
+    q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
+) {
+    let spawn_point = if let Some(check_point) = history.0.last() {
+        if let Ok(gtf) = q_gtf.get(*check_point) {
+            gtf.translation() + SPAWN_OFFSET
+        } else {
+            SPAWN_OFFSET
+        }
+    } else {
+        SPAWN_OFFSET
+    };
+
     for (mut transform, mut velocity) in &mut query {
-        if transform.translation.y > -50.0 {
+        if (spawn_point.y - transform.translation.y).abs() < 100. {
             continue;
         }
 
         velocity.0 = Vec3::ZERO;
-        transform.translation = SPAWN_POINT;
+        transform.translation = spawn_point
     }
 }

@@ -46,7 +46,7 @@ impl Plugin for WorldPlugin {
 
 fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<AssetServer>) {
     let mut window = window.single_mut().unwrap();
-    window.title = String::from("Minimal FPS Controller Example");
+    window.title = String::from("Bevy Hop");
 
     commands.spawn((
         DirectionalLight {
@@ -58,17 +58,21 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
     ));
 
     commands.insert_resource(MainScene {
-        handle: assets.load("playground.glb"),
+        levels: (1..=2)
+            .map(|x| assets.load(format!("level{:?}.glb", x)) as Handle<Gltf>)
+            .collect(),
         is_loaded: false,
         is_spawned: false,
+        current_level: 0,
     });
 }
 
 #[derive(Resource)]
 struct MainScene {
-    handle: Handle<Gltf>,
+    levels: Vec<Handle<Gltf>>,
     is_loaded: bool,
     is_spawned: bool,
+    current_level: usize,
 }
 
 fn spawn_world(
@@ -80,7 +84,7 @@ fn spawn_world(
         return;
     }
 
-    let gltf = gltf_assets.get(&main_scene.handle);
+    let gltf = gltf_assets.get(&main_scene.levels[main_scene.current_level]);
 
     if let Some(gltf) = gltf {
         let scene = gltf.scenes.first().unwrap().clone();
@@ -95,6 +99,8 @@ fn scene_colliders(
     mut main_scene: ResMut<MainScene>,
     q_props: Query<Entity, With<Prop>>,
     q_ground: Query<Entity, With<Ground>>,
+    q_checkpoint: Query<Entity, With<CheckPoint>>,
+    q_end: Query<Entity, With<End>>,
     q_boost: Query<(Entity, &MeshMaterial3d<StandardMaterial>), With<SpeedBoost>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     effects: Res<ParticleEffects>,
@@ -137,6 +143,7 @@ fn scene_colliders(
     }
 
     for ground in &q_ground {
+        // TODO separate and mark as ready individually (0 unmarked left = is_loaded = true)
         main_scene.is_loaded = true;
 
         cmd.entity(ground).insert((
@@ -144,6 +151,67 @@ fn scene_colliders(
             ColliderConstructor::TrimeshFromMesh,
             RigidBody::Static,
         ));
+    }
+
+    for checkpoint in &q_checkpoint {
+        cmd.entity(checkpoint)
+            .insert(CollisionEventsEnabled)
+            .observe(
+                |trigger: Trigger<OnCollisionStart>,
+                 mut history: ResMut<History>,
+                 q_target: Query<&GlobalTransform, With<CheckPoint>>,
+                 q_player: Query<&GlobalTransform, With<LogicalPlayer>>| {
+                    let other_entity = trigger.collider;
+
+                    let Ok(target_gtf) = q_target.get(other_entity) else {
+                        return;
+                    };
+
+                    let Ok(player_gtf) = q_player.get(other_entity) else {
+                        return;
+                    };
+
+                    if player_gtf.translation().y < target_gtf.translation().y {
+                        return;
+                    };
+
+                    history.0.push(trigger.target());
+                },
+            );
+    }
+
+    for end in &q_end {
+        cmd.entity(end).insert(CollisionEventsEnabled).observe(
+            |trigger: Trigger<OnCollisionStart>,
+             mut cmd: Commands,
+             mut history: ResMut<History>,
+             q_target: Query<&GlobalTransform, With<End>>,
+             q_player: Query<&GlobalTransform, With<LogicalPlayer>>,
+             scene: Single<Entity, With<SceneRoot>>,
+             mut main_scene: ResMut<MainScene>| {
+                let other_entity = trigger.collider;
+
+                let Ok(target_gtf) = q_target.get(other_entity) else {
+                    return;
+                };
+
+                let Ok(player_gtf) = q_player.get(other_entity) else {
+                    return;
+                };
+
+                if player_gtf.translation().y < target_gtf.translation().y {
+                    return;
+                };
+
+                history.0.clear();
+
+                main_scene.current_level += 1;
+                main_scene.is_spawned = false;
+                main_scene.is_loaded = false;
+
+                cmd.entity(scene.into_inner()).despawn();
+            },
+        );
     }
 }
 
@@ -162,13 +230,21 @@ fn boost_collision(
         return;
     };
 
-    player.0 *= Vec3::splat(1.5);
+    player.0 *= Vec3::splat(1.2);
 
     let Ok(gtf) = q_gtf.get(boost) else {
         return;
     };
 
+    cmd.entity(other_entity).with_child((
+        ParticleEffect::new(effects.player_boost_effect.clone()),
+        Visibility::Visible,
+        Lifetime {
+            timer: Timer::from_seconds(2., TimerMode::Once),
+        },
+    ));
     cmd.spawn((
+        Visibility::Visible,
         ParticleEffect::new(effects.boost_effect.clone()),
         Transform::from_translation(gtf.translation()),
         Lifetime {
