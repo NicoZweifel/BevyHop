@@ -1,5 +1,6 @@
 mod console;
 mod core;
+mod duration;
 mod input;
 mod particle;
 mod player;
@@ -19,6 +20,7 @@ fn main() {
             ParticlePlugin,
             WorldPlugin,
             PlayerPlugin,
+            DurationPlugin,
             InputPlugin,
             UiPlugin,
             ConsolePlugin,

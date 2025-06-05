@@ -1,5 +1,6 @@
 pub use crate::console::*;
 pub use crate::core::*;
+pub use crate::duration::*;
 pub use crate::input::*;
 pub use crate::particle::*;
 pub use crate::player::*;

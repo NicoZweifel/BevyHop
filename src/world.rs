@@ -5,13 +5,14 @@ use bevy::gltf::Gltf;
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::ParticleEffect;
 use std::f32::consts::TAU;
+use std::num::NonZeroUsize;
 
 use crate::core::*;
 use crate::state::{AppState, GameplaySet};
 
 pub struct WorldPlugin;
 
-const LEVEL_COUNT: usize = 3;
+pub const LEVEL_COUNT: usize = 3;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
@@ -79,27 +80,43 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
             .map(|x| assets.load(format!("level{:?}.glb", x)) as Handle<Gltf>)
             .collect(),
         is_spawned: false,
-        current_level: 1,
     });
+
+    commands.insert_resource(CurrentLevel(NonZeroUsize::MIN));
 }
 
 #[derive(Resource)]
 struct MainScene {
     levels: Vec<Handle<Gltf>>,
     is_spawned: bool,
-    current_level: usize,
+}
+
+impl MainScene {
+    fn level(&self, level: NonZeroUsize) -> &Handle<Gltf> {
+        &self.levels[level.get() - 1]
+    }
+}
+
+#[derive(Resource)]
+struct CurrentLevel(pub NonZeroUsize);
+
+impl CurrentLevel {
+    fn get(&self) -> NonZeroUsize {
+        self.0
+    }
 }
 
 fn spawn_world(
     mut commands: Commands,
     mut main_scene: ResMut<MainScene>,
+    current_level: ResMut<CurrentLevel>,
     gltf_assets: Res<Assets<Gltf>>,
 ) {
     if main_scene.is_spawned {
         return;
     }
 
-    let gltf = gltf_assets.get(&main_scene.levels[main_scene.current_level - 1]);
+    let gltf = gltf_assets.get(main_scene.level(current_level.get()));
 
     if let Some(gltf) = gltf {
         let scene = gltf.scenes.first().unwrap().clone();
@@ -228,9 +245,11 @@ fn end_colliders(
             ))
             .observe(
                 |_: Trigger<OnCollisionStart>,
-                 main_scene: Res<MainScene>,
+                 current_level: Res<CurrentLevel>,
                  mut ew: EventWriter<SpawnLevel>| {
-                    ew.write(SpawnLevel(main_scene.current_level + 1));
+                    ew.write(SpawnLevel(
+                        NonZeroUsize::new(current_level.get().get() + 1).unwrap(),
+                    ));
                 },
             );
     }
@@ -240,6 +259,8 @@ fn spawn_level(
     mut cmd: Commands,
     mut history: ResMut<History>,
     scene: Single<Entity, With<SceneRoot>>,
+
+    mut current_level: ResMut<CurrentLevel>,
     mut main_scene: ResMut<MainScene>,
     mut er: EventReader<SpawnLevel>,
     mut q_player: Query<&mut Transform, With<LogicalPlayer>>,
@@ -251,7 +272,7 @@ fn spawn_level(
     for e in er.read() {
         history.0.clear();
 
-        main_scene.current_level = e.0;
+        current_level.0 = e.0;
         main_scene.is_spawned = false;
 
         cmd.entity(scene).despawn();

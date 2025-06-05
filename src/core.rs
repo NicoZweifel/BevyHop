@@ -1,7 +1,7 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, num::NonZeroUsize};
 
 use avian3d::{PhysicsPlugins, prelude::*};
-use bevy::{asset::AssetMetaCheck, prelude::*, time::Stopwatch};
+use bevy::{asset::AssetMetaCheck, prelude::*};
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::EffectAsset;
 use bevy_skein::SkeinPlugin;
@@ -11,7 +11,7 @@ use crate::state::*;
 pub const SPAWN_POINT: Vec3 = Vec3::new(0.0, 8., 0.0);
 
 #[derive(Event)]
-pub struct SpawnLevel(pub usize);
+pub struct SpawnLevel(pub NonZeroUsize);
 
 #[derive(Event)]
 pub struct Respawn<S: Component> {
@@ -78,9 +78,6 @@ pub struct End;
 #[reflect(Component)]
 pub struct SpeedBoost(pub f32);
 
-#[derive(Resource, Reflect, Debug, Default)]
-pub struct RunDuration(Stopwatch);
-
 #[derive(Resource, Debug, Default)]
 pub struct History(pub Vec<Entity>);
 
@@ -121,7 +118,6 @@ impl Plugin for CorePlugin {
         app.add_event::<SpawnLevel>()
             .insert_resource(Time::<Fixed>::from_hz(128.0))
             .insert_resource(History::default())
-            .insert_resource(RunDuration::default())
             .register_type::<Prop>()
             .register_type::<Character>()
             .register_type::<TransformInterpolation>()

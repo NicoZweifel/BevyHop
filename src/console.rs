@@ -1,8 +1,10 @@
+use std::num::NonZeroUsize;
+
 use bevy::prelude::*;
 use bevy_console::*;
 use clap::Parser;
 
-use crate::{core::*, state::*};
+use crate::{core::*, state::*, world::LEVEL_COUNT};
 
 pub struct ConsolePlugin;
 
@@ -40,6 +42,19 @@ struct LevelCommand {
 fn level(mut log: ConsoleCommand<LevelCommand>, mut ew: EventWriter<SpawnLevel>) {
     if let Some(Ok(LevelCommand { level })) = log.take() {
         reply!(log, "Loading Level {level}");
+
+        let Some(level) = NonZeroUsize::new(level) else {
+            reply!(log, "Level must be greather than 0!");
+            return;
+        };
+
+        if level.get() > LEVEL_COUNT {
+            reply!(
+                log,
+                "Level {level} does not exist! The MAX Level is {LEVEL_COUNT}."
+            );
+            return;
+        };
 
         ew.write(SpawnLevel(level));
     }
