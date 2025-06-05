@@ -18,7 +18,7 @@ impl Plugin for PlayerPlugin {
         app.add_systems(OnEnter(AppState::InGame), setup)
             .add_systems(
                 OnExit(AppState::InGame),
-                (teardown::<LogicalPlayer>, teardown::<RenderPlayer>),
+                (cleanup::<LogicalPlayer>, cleanup::<RenderPlayer>),
             );
     }
 }
@@ -52,7 +52,12 @@ fn setup(mut cmd: Commands) {
                 RigidBody::Dynamic,
                 CollisionLayers::new(
                     CollisionLayer::Player,
-                    [CollisionLayer::Default, CollisionLayer::Boost],
+                    [
+                        CollisionLayer::Default,
+                        CollisionLayer::Boost,
+                        CollisionLayer::Checkpoint,
+                        CollisionLayer::End,
+                    ],
                 ),
                 Sleeping,
                 LockedAxes::ROTATION_LOCKED,
@@ -62,7 +67,7 @@ fn setup(mut cmd: Commands) {
             ),
             (
                 Visibility::Visible,
-                Transform::from_translation(SPAWN_OFFSET),
+                Transform::from_translation(SPAWN_POINT),
             ),
             LogicalPlayer,
             (NotShadowCaster, NotShadowReceiver),

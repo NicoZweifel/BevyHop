@@ -195,10 +195,14 @@ fn checkpoint_colliders(
 
     for checkpoint in &q_checkpoint {
         cmd.entity(checkpoint)
-            .insert((CollisionEventsEnabled, Ready))
+            .insert((
+                Ready,
+                CollisionLayers::new(CollisionLayer::Checkpoint, [CollisionLayer::Player]),
+                ColliderConstructor::TrimeshFromMesh,
+                CollisionEventsEnabled,
+            ))
             .observe(
                 |trigger: Trigger<OnCollisionStart>, mut history: ResMut<History>| {
-                    println!("y");
                     history.0.push(trigger.target());
                 },
             );
@@ -216,7 +220,12 @@ fn end_colliders(
 
     for end in &q_end {
         cmd.entity(end)
-            .insert((CollisionEventsEnabled, Ready))
+            .insert((
+                Ready,
+                CollisionLayers::new(CollisionLayer::End, [CollisionLayer::Player]),
+                ColliderConstructor::TrimeshFromMesh,
+                CollisionEventsEnabled,
+            ))
             .observe(
                 |_: Trigger<OnCollisionStart>,
                  main_scene: Res<MainScene>,
@@ -235,7 +244,7 @@ fn spawn_level(
     mut er: EventReader<SpawnLevel>,
     mut q_player: Query<&mut Transform, With<LogicalPlayer>>,
 ) {
-    let spawn_point = SPAWN_OFFSET;
+    let spawn_point = SPAWN_POINT;
 
     let scene = scene.into_inner();
 

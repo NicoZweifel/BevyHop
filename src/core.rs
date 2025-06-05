@@ -1,14 +1,14 @@
 use std::marker::PhantomData;
 
 use avian3d::{PhysicsPlugins, prelude::*};
-use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy::{asset::AssetMetaCheck, prelude::*, time::Stopwatch};
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::EffectAsset;
 use bevy_skein::SkeinPlugin;
 
 use crate::state::*;
 
-pub const SPAWN_OFFSET: Vec3 = Vec3::new(0.0, 8., 0.0);
+pub const SPAWN_POINT: Vec3 = Vec3::new(0.0, 8., 0.0);
 
 #[derive(Event)]
 pub struct SpawnLevel(pub usize);
@@ -44,6 +44,8 @@ pub enum CollisionLayer {
     Player,
     Prop,
     Boost,
+    Checkpoint,
+    End,
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -77,7 +79,27 @@ pub struct End;
 pub struct SpeedBoost(pub f32);
 
 #[derive(Resource, Reflect, Debug, Default)]
+pub struct RunDuration(Stopwatch);
+
+#[derive(Resource, Debug, Default)]
 pub struct History(pub Vec<Entity>);
+
+impl History {
+    pub fn last(&self, q_gtf: Query<&GlobalTransform, With<CheckPoint>>) -> Vec3 {
+        if let Some(check_point) = self.0.last() {
+            if let Ok(gtf) = q_gtf.get(*check_point) {
+                let t = gtf.translation();
+                return t.with_z(t.z + 4.);
+            }
+        };
+
+        SPAWN_POINT
+    }
+
+    pub fn empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
 
 #[derive(Component, Reflect, Default)]
 #[reflect(Component)]
@@ -99,6 +121,7 @@ impl Plugin for CorePlugin {
         app.add_event::<SpawnLevel>()
             .insert_resource(Time::<Fixed>::from_hz(128.0))
             .insert_resource(History::default())
+            .insert_resource(RunDuration::default())
             .register_type::<Prop>()
             .register_type::<Character>()
             .register_type::<TransformInterpolation>()
@@ -139,14 +162,12 @@ impl<S: Component> Default for UnitPlugin<S> {
 
 impl<S: Component> Plugin for UnitPlugin<S> {
     fn build(&self, app: &mut App) {
-        app.add_event::<Respawn<S>>()
-            .add_systems(
-                FixedUpdate,
-                (out_of_bounds::<S>, respawn::<S>)
-                    .chain()
-                    .in_set(GameplaySet),
-            )
-            .add_systems(OnExit(AppState::InGame), cleanup::<S>.after(teardown::<S>));
+        app.add_event::<Respawn<S>>().add_systems(
+            FixedUpdate,
+            (out_of_bounds::<S>, respawn::<S>)
+                .chain()
+                .in_set(GameplaySet),
+        );
     }
 }
 
@@ -164,10 +185,6 @@ pub fn cleanup_timed<S: Component>(
     }
 }
 
-pub fn teardown<S: Component>(mut cmd: Commands, e: Single<Entity, With<S>>) {
-    cmd.entity(e.into_inner()).despawn();
-}
-
 pub fn cleanup<S: Component>(mut cmd: Commands, q: Query<Entity, With<S>>) {
     for x in &q {
         cmd.entity(x).despawn();
@@ -179,11 +196,9 @@ pub fn respawn<S: Component>(
     mut er: EventReader<Respawn<S>>,
 ) {
     for e in er.read() {
-        let spawn_point = e.translation + SPAWN_OFFSET;
-
         for (mut transform, mut velocity) in &mut q {
             velocity.0 = Vec3::ZERO;
-            transform.translation = spawn_point
+            transform.translation = e.translation;
         }
     }
 }
@@ -192,18 +207,9 @@ fn out_of_bounds<S: Component>(
     q: Query<&Transform, With<S>>,
     history: Res<History>,
     q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
-
     mut er: EventWriter<Respawn<S>>,
 ) {
-    let spawn_point = if let Some(check_point) = history.0.last() {
-        if let Ok(gtf) = q_gtf.get(*check_point) {
-            gtf.translation()
-        } else {
-            Vec3::ZERO
-        }
-    } else {
-        Vec3::ZERO
-    };
+    let spawn_point = history.last(q_gtf);
 
     for transform in &q {
         if (spawn_point.y - transform.translation.y).abs() < 100. {

@@ -117,15 +117,7 @@ fn handle_reset(
             history.0.clear();
         };
 
-        let spawn_point = if let Some(check_point) = history.0.last() {
-            if let Ok(gtf) = q_gtf.get(*check_point) {
-                gtf.translation()
-            } else {
-                Vec3::ZERO
-            }
-        } else {
-            Vec3::ZERO
-        };
+        let spawn_point = history.last(q_gtf);
 
         ew.write(Respawn::<LogicalPlayer>::new(spawn_point));
     }

@@ -24,15 +24,15 @@ impl Default for ButtonColors {
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(AppState::InGame), setup_hud)
-            .add_systems(OnExit(AppState::InGame), teardown::<Hud>)
+            .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
             .add_systems(Update, update_speed_ui.run_if(in_state(AppState::InGame)))
             .add_systems(OnEnter(AppState::MainMenu), setup_main_menu)
             .add_systems(
                 OnExit(AppState::MainMenu),
-                (teardown::<MainMenu>, teardown::<Camera3d>),
+                (cleanup::<MainMenu>, cleanup::<Camera3d>),
             )
             .add_systems(OnEnter(PausedState::Paused), setup_pause_menu)
-            .add_systems(OnExit(PausedState::Paused), teardown::<PauseMenu>);
+            .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>);
     }
 }
 
