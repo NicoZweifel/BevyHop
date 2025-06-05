@@ -1,6 +1,8 @@
 use avian3d::prelude::*;
-use bevy::{prelude::*, window::CursorGrabMode};
+use bevy::{color::palettes::tailwind, prelude::*, window::CursorGrabMode};
+use bevy_egui::EguiPlugin;
 use bevy_fps_controller::controller::*;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use crate::{core::*, prelude::LevelDuration, state::*};
 
@@ -23,19 +25,26 @@ impl Default for ButtonColors {
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InGame), setup_hud)
-            .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
-            .add_systems(
-                Update,
-                (update_speed_ui, update_time_ui).in_set(GameplaySet),
-            )
-            .add_systems(OnEnter(AppState::MainMenu), setup_main_menu)
-            .add_systems(
-                OnExit(AppState::MainMenu),
-                (cleanup::<MainMenu>, cleanup::<Camera3d>),
-            )
-            .add_systems(OnEnter(PausedState::Paused), setup_pause_menu)
-            .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>);
+        app.add_plugins((
+            EguiPlugin {
+                enable_multipass_for_primary_context: false,
+            },
+            WorldInspectorPlugin::default().run_if(in_state(DebugState::Enabled)),
+            bevy_console::ConsolePlugin,
+        ))
+        .add_systems(OnEnter(AppState::InGame), setup_hud)
+        .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
+        .add_systems(
+            Update,
+            (update_speed_ui, update_time_ui).in_set(GameplaySet),
+        )
+        .add_systems(OnEnter(AppState::MainMenu), setup_main_menu)
+        .add_systems(
+            OnExit(AppState::MainMenu),
+            (cleanup::<MainMenu>, cleanup::<Camera3d>),
+        )
+        .add_systems(OnEnter(PausedState::Paused), setup_pause_menu)
+        .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>);
     }
 }
 
@@ -152,7 +161,10 @@ fn setup_pause_menu(mut cmd: Commands) {
 struct MainMenu;
 
 fn setup_main_menu(mut cmd: Commands) {
-    cmd.spawn(Camera3d::default());
+    cmd.spawn((
+        Camera3d::default(),
+        Transform::from_translation(Vec3::ZERO.with_y(15.)),
+    ));
     cmd.spawn((
         Node {
             // fill the entire window
@@ -166,6 +178,7 @@ fn setup_main_menu(mut cmd: Commands) {
             ..Default::default()
         },
         MainMenu,
+        BackgroundColor(Color::from(tailwind::GRAY_500)),
     ))
     .with_children(|children| {
         let button_colors = ButtonColors::default();

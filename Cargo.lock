@@ -580,6 +580,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-inspector-egui"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4971e763f289921fd4616418628458bec26a6fc13fe4299c0e4066f39d7ceaa2"
+dependencies = [
+ "bevy-inspector-egui-derive",
+ "bevy_app",
+ "bevy_asset",
+ "bevy_color",
+ "bevy_core_pipeline",
+ "bevy_ecs",
+ "bevy_egui",
+ "bevy_image",
+ "bevy_log",
+ "bevy_math",
+ "bevy_pbr",
+ "bevy_platform",
+ "bevy_reflect",
+ "bevy_render",
+ "bevy_state",
+ "bevy_time",
+ "bevy_utils",
+ "bevy_window",
+ "bytemuck",
+ "disqualified",
+ "egui",
+ "fuzzy-matcher",
+ "image",
+ "smallvec",
+ "uuid",
+ "winit",
+]
+
+[[package]]
+name = "bevy-inspector-egui-derive"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2656316165dbe2af6b3acaa763332f5dbdd12f809d59f5bf4304e0642a8005c9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.101",
+]
+
+[[package]]
 name = "bevy_a11y"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1046,10 +1091,13 @@ dependencies = [
  "avian3d",
  "avian_pickup",
  "bevy",
+ "bevy-inspector-egui",
  "bevy_console",
+ "bevy_egui",
  "bevy_fps_controller",
  "bevy_hanabi",
  "bevy_skein",
+ "bevy_water",
  "log",
  "tracing",
 ]
@@ -1688,6 +1736,16 @@ checksum = "94f7a8905a125d2017e8561beefb7f2f5e67e93ff6324f072ad87c5fd6ec3b99"
 dependencies = [
  "bevy_platform",
  "thread_local",
+]
+
+[[package]]
+name = "bevy_water"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a6352d5638854915e241f68b63d59e0cd64a67a27039298228677a3d5e98a6ce"
+dependencies = [
+ "anyhow",
+ "bevy",
 ]
 
 [[package]]
@@ -2797,6 +2855,15 @@ dependencies = [
  "futures-task",
  "pin-project-lite",
  "pin-utils",
+]
+
+[[package]]
+name = "fuzzy-matcher"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54614a3312934d066701a80f20f15fa3b56d67ac7722b39eea5b4c9dd1d66c94"
+dependencies = [
+ "thread_local",
 ]
 
 [[package]]

@@ -5,6 +5,7 @@ use std::f32::consts::TAU;
 use avian_pickup::actor::*;
 use avian3d::prelude::*;
 use bevy::{
+    core_pipeline::Skybox,
     pbr::{NotShadowCaster, NotShadowReceiver},
     prelude::*,
     render::camera::Exposure,
@@ -23,7 +24,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup(mut cmd: Commands) {
+fn setup(mut cmd: Commands, asset_server: Res<AssetServer>) {
     // Note that we have two entities for the player
     // One is a "logical" player that handles the physics computation and collision
     // The other is a "render" player that is what is displayed to the user
@@ -92,8 +93,15 @@ fn setup(mut cmd: Commands) {
         })
         .id();
 
+    let skybox_handle = asset_server.load("skybox_1_skybox.ktx2");
+
     cmd.spawn((
         Camera3d::default(),
+        Skybox {
+            image: skybox_handle.clone(),
+            brightness: 100000.0,
+            ..default()
+        },
         Projection::Perspective(PerspectiveProjection {
             fov: TAU / 5.0,
             ..default()
@@ -103,12 +111,10 @@ fn setup(mut cmd: Commands) {
         Visibility::Visible,
         AvianPickupActor {
             interaction_distance: 5.,
-
             prop_filter: SpatialQueryFilter::from_mask([
                 CollisionLayer::Prop,
                 CollisionLayer::Boost,
             ]),
-
             actor_filter: SpatialQueryFilter::from_mask(CollisionLayer::Player),
             obstacle_filter: SpatialQueryFilter::from_mask(CollisionLayer::Default),
             throw: AvianPickupActorThrowConfig {

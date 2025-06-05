@@ -1,5 +1,6 @@
 use bevy::{input::mouse::MouseWheel, prelude::*, window::CursorGrabMode};
 
+use bevy_egui::{EguiContexts, EguiPreUpdateSet};
 use bevy_fps_controller::controller::*;
 
 use avian_pickup::prelude::*;
@@ -11,6 +12,12 @@ pub struct InputPlugin;
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((AvianPickupPlugin::default(), FpsControllerPlugin))
+            .add_systems(
+                PreUpdate,
+                (block_mouse_input, block_keyboard_input)
+                    .after(EguiPreUpdateSet::ProcessInput)
+                    .before(EguiPreUpdateSet::BeginPass),
+            )
             .add_systems(
                 Update,
                 (
@@ -120,5 +127,28 @@ fn handle_reset(
         let spawn_point = history.last(q_gtf);
 
         ew.write(Respawn::<LogicalPlayer>::new(spawn_point));
+    }
+}
+
+pub fn block_mouse_input(mut mouse: ResMut<ButtonInput<MouseButton>>, mut contexts: EguiContexts) {
+    let Some(context) = contexts.try_ctx_mut() else {
+        return;
+    };
+
+    if context.is_pointer_over_area() || context.wants_pointer_input() {
+        mouse.reset_all();
+    }
+}
+
+pub fn block_keyboard_input(
+    mut keyboard_keycode: ResMut<ButtonInput<KeyCode>>,
+    mut contexts: EguiContexts,
+) {
+    let Some(context) = contexts.try_ctx_mut() else {
+        return;
+    };
+
+    if context.wants_keyboard_input() {
+        keyboard_keycode.reset_all();
     }
 }

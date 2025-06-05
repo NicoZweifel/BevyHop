@@ -1,22 +1,33 @@
 use avian3d::prelude::*;
-use bevy::{prelude::*, scene::SceneInstanceReady};
-
-use bevy::gltf::Gltf;
+use bevy::{gltf::Gltf, prelude::*, scene::SceneInstanceReady};
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::ParticleEffect;
-use std::f32::consts::TAU;
-use std::num::NonZeroUsize;
+use bevy_water::*;
+use std::{f32::consts::TAU, num::NonZeroUsize};
 
 use crate::core::*;
-use crate::state::{AppState, GameplaySet};
+use crate::state::*;
 
 pub struct WorldPlugin;
 
+#[derive(Component, Reflect, Debug)]
+#[reflect(Component)]
+pub struct Sun;
+
 pub const LEVEL_COUNT: usize = 3;
+
+const WATER_HEIGHT: f32 = 10.0;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SpawnLevel>()
+        app.register_type::<Sun>()
+            .insert_resource(WaterSettings {
+                height: WATER_HEIGHT,
+
+                ..default()
+            })
+            .add_plugins(WaterPlugin)
+            .add_event::<SpawnLevel>()
             .add_systems(Startup, setup)
             .add_systems(
                 FixedUpdate,
@@ -32,6 +43,8 @@ impl Plugin for WorldPlugin {
                     boost_colliders,
                     end_colliders,
                     checkpoint_colliders,
+                    setup_water,
+                    translate_water,
                 )
                     .after(spawn_world)
                     .run_if(in_state(AppState::InGame)),
@@ -57,8 +70,7 @@ impl Plugin for WorldPlugin {
                 color: Color::WHITE,
                 brightness: 10000.0,
                 affects_lightmapped_meshes: true,
-            })
-            .insert_resource(ClearColor(Color::linear_rgb(0.83, 0.96, 0.96)));
+            });
     }
 }
 
@@ -72,7 +84,7 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
             shadows_enabled: true,
             ..default()
         },
-        Transform::from_xyz(4.0, 7.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(4.0, 7.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
     commands.insert_resource(MainScene {
@@ -83,6 +95,23 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
     });
 
     commands.insert_resource(CurrentLevel(NonZeroUsize::MIN));
+}
+
+fn setup_water(mut q_water: Query<&mut Transform, (With<WaterTiles>, Without<Ready>)>) {
+    for mut water in &mut q_water {
+        water.scale = Vec3::splat(8.);
+    }
+}
+
+fn translate_water(
+    mut q_water: Query<&mut Transform, With<WaterTiles>>,
+    history: Res<History>,
+    q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
+) {
+    let spawn_point = history.last(q_gtf);
+    for mut water in &mut q_water {
+        water.translation.y = spawn_point.y - 170.;
+    }
 }
 
 #[derive(Resource)]
@@ -176,7 +205,8 @@ fn boost_colliders(
             .with_child(PointLight {
                 color: Color::srgba(0.283153, 0.708391, 0.141266, 0.5),
                 radius: 2.0,
-                intensity: 5_000_000.0,
+                intensity: 2_000_000.0,
+                shadows_enabled: false,
                 ..default()
             });
     }

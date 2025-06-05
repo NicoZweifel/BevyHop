@@ -10,8 +10,7 @@ pub struct ConsolePlugin;
 
 impl Plugin for ConsolePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(bevy_console::ConsolePlugin)
-            .insert_resource(ConsoleConfiguration::default())
+        app.insert_resource(ConsoleConfiguration::default())
             .add_console_command::<ExampleCommand, _>(example_command)
             .add_console_command::<LevelCommand, _>(level)
             .add_console_command::<DebugCommand, _>(debug)
