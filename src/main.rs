@@ -1,3 +1,4 @@
+mod color;
 mod console;
 mod core;
 mod duration;

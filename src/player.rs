@@ -93,15 +93,8 @@ fn setup(mut cmd: Commands, asset_server: Res<AssetServer>) {
         })
         .id();
 
-    let skybox_handle = asset_server.load("skybox_1_skybox.ktx2");
-
     cmd.spawn((
         Camera3d::default(),
-        Skybox {
-            image: skybox_handle.clone(),
-            brightness: 100000.0,
-            ..default()
-        },
         Projection::Perspective(PerspectiveProjection {
             fov: TAU / 5.0,
             ..default()

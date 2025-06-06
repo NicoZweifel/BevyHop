@@ -1,10 +1,13 @@
 use avian3d::prelude::*;
+use bevy::core_pipeline::Skybox;
+use bevy::ecs::entity;
 use bevy::{gltf::Gltf, prelude::*, scene::SceneInstanceReady};
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::ParticleEffect;
 use bevy_water::*;
 use std::{f32::consts::TAU, num::NonZeroUsize};
 
+use crate::color::Resurrect64;
 use crate::core::*;
 use crate::state::*;
 
@@ -53,7 +56,7 @@ impl Plugin for WorldPlugin {
                 FixedUpdate,
                 (cleanup_timed::<SpeedBoost>).in_set(GameplaySet),
             )
-            .add_systems(Update, rotate.in_set(GameplaySet))
+            .add_systems(Update, rotate_speed_boost.in_set(GameplaySet))
             .add_observer(
                 |trigger: Trigger<SceneInstanceReady>,
                  children: Query<&Children>,
@@ -91,6 +94,9 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
         levels: (1..=LEVEL_COUNT)
             .map(|x| assets.load(format!("level{:?}.glb", x)) as Handle<Gltf>)
             .collect(),
+        skyboxes: (1..=LEVEL_COUNT)
+            .map(|x| assets.load(format!("skybox_{:?}_skybox.ktx2", x)) as Handle<Image>)
+            .collect(),
         is_spawned: false,
     });
 
@@ -118,11 +124,16 @@ fn translate_water(
 struct MainScene {
     levels: Vec<Handle<Gltf>>,
     is_spawned: bool,
+    skyboxes: Vec<Handle<Image>>,
 }
 
 impl MainScene {
     fn level(&self, level: NonZeroUsize) -> &Handle<Gltf> {
         &self.levels[level.get() - 1]
+    }
+
+    fn skybox(&self, level: NonZeroUsize) -> &Handle<Image> {
+        &self.skyboxes[level.get() - 1]
     }
 }
 
@@ -136,10 +147,12 @@ impl CurrentLevel {
 }
 
 fn spawn_world(
-    mut commands: Commands,
+    mut cmd: Commands,
     mut main_scene: ResMut<MainScene>,
     current_level: ResMut<CurrentLevel>,
     gltf_assets: Res<Assets<Gltf>>,
+    q_camera: Query<Entity, With<Camera3d>>,
+    mut water_settings: ResMut<WaterSettings>,
 ) {
     if main_scene.is_spawned {
         return;
@@ -149,10 +162,31 @@ fn spawn_world(
 
     if let Some(gltf) = gltf {
         let scene = gltf.scenes.first().unwrap().clone();
-        commands.spawn(SceneRoot(scene));
+        cmd.spawn(SceneRoot(scene));
 
         main_scene.is_spawned = true;
     }
+
+    let skybox_handle = main_scene.skybox(current_level.get());
+    for entity in &q_camera {
+        cmd.entity(entity).remove::<Skybox>().insert(Skybox {
+            image: skybox_handle.clone(),
+            brightness: match current_level.get().get() {
+                1 => 50000.,
+                2 => 30000.,
+                3 => 50000.,
+                _ => 10000.,
+            },
+            ..default()
+        });
+    }
+
+    water_settings.deep_color = match current_level.get().get() {
+        1 => Resurrect64::CYAN,
+        2 => Resurrect64::PURPLE,
+        3 => Resurrect64::DARK_SCARLET,
+        _ => Resurrect64::DARK_CYAN,
+    };
 }
 
 fn prop_colliders(
@@ -199,16 +233,18 @@ fn boost_colliders(
                 ),
                 ColliderConstructor::ConvexHullFromMesh,
                 CollisionEventsEnabled,
+                children![
+                    ParticleEffect::new(effects.boost_idle_effect.clone()),
+                    PointLight {
+                        color: Resurrect64::GREEN,
+                        radius: 3.0,
+                        intensity: 3_000_000.0,
+                        shadows_enabled: false,
+                        ..default()
+                    }
+                ],
             ))
-            .observe(boost_collision)
-            .with_child(ParticleEffect::new(effects.boost_idle_effect.clone()))
-            .with_child(PointLight {
-                color: Color::srgba(0.283153, 0.708391, 0.141266, 0.5),
-                radius: 2.0,
-                intensity: 2_000_000.0,
-                shadows_enabled: false,
-                ..default()
-            });
+            .observe(boost_collision);
     }
 }
 
@@ -354,7 +390,7 @@ fn boost_collision(
     ));
 }
 
-fn rotate(mut cubes: Query<&mut Transform, With<SpeedBoost>>, timer: Res<Time>) {
+fn rotate_speed_boost(mut cubes: Query<&mut Transform, With<SpeedBoost>>, timer: Res<Time>) {
     for mut transform in &mut cubes {
         let rotation = TAU * timer.delta_secs();
         transform.rotate_x(0.1 * rotation);
