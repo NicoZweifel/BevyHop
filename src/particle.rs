@@ -19,7 +19,12 @@ pub(crate) fn setup(mut cmd: Commands, mut effects: ResMut<Assets<EffectAsset>>)
         Resurrect64::SCARLET,
     ]
     .iter()
-    .map(|x| effects.add(setup_checkpoint_effect(x.to_linear().to_vec3())))
+    .map(|x| {
+        effects.add(setup_checkpoint_effect(
+            x.to_linear().to_vec3(),
+            format!("checkpoint_effect_{:?}", x),
+        ))
+    })
     .collect::<Vec<Handle<EffectAsset>>>()
     .try_into()
     .unwrap();
@@ -30,7 +35,12 @@ pub(crate) fn setup(mut cmd: Commands, mut effects: ResMut<Assets<EffectAsset>>)
         Resurrect64::SCARLET,
     ]
     .iter()
-    .map(|x| effects.add(setup_new_level_effect(x.to_linear().to_vec3())))
+    .map(|x| {
+        effects.add(setup_new_level_effect(
+            x.to_linear().to_vec3(),
+            format!("new_level_effect_{:?}", x),
+        ))
+    })
     .collect::<Vec<Handle<EffectAsset>>>()
     .try_into()
     .unwrap();
@@ -210,7 +220,7 @@ pub(crate) fn setup_player_boost_effect() -> EffectAsset {
         .render(orient)
 }
 
-pub(crate) fn setup_new_level_effect(base_color: Vec3) -> EffectAsset {
+pub(crate) fn setup_new_level_effect(base_color: Vec3, name: impl Into<String>) -> EffectAsset {
     let mut color_gradient1 = Gradient::new();
 
     color_gradient1.add_key(
@@ -279,7 +289,7 @@ pub(crate) fn setup_new_level_effect(base_color: Vec3) -> EffectAsset {
         TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(1., 1., 1.), 60.);
 
     EffectAsset::new(2048, spawner, module)
-        .with_name("new_level_effect")
+        .with_name(name)
         .with_simulation_space(SimulationSpace::Local)
         .init(init_pos)
         .init(init_vel)
@@ -300,7 +310,7 @@ pub(crate) fn setup_new_level_effect(base_color: Vec3) -> EffectAsset {
         .render(orient)
 }
 
-pub(crate) fn setup_checkpoint_effect(base_color: Vec3) -> EffectAsset {
+pub(crate) fn setup_checkpoint_effect(base_color: Vec3, name: impl Into<String>) -> EffectAsset {
     let mut color_gradient1 = Gradient::new();
 
     color_gradient1.add_key(
@@ -369,7 +379,7 @@ pub(crate) fn setup_checkpoint_effect(base_color: Vec3) -> EffectAsset {
         TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(1., 0., 0.), 40.);
 
     EffectAsset::new(2048, spawner, module)
-        .with_name("checkpoint_effect")
+        .with_name(name)
         .with_simulation_space(SimulationSpace::Local)
         .init(init_pos)
         .init(init_vel)
