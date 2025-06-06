@@ -326,11 +326,12 @@ fn setup_game_over_menu(mut cmd: Commands) {
         ))
         .observe(
             |_: Trigger<Pointer<Click>>,
-             mut ns: ResMut<NextState<PausedState>>,
-
+             mut ns_paused_state: ResMut<NextState<PausedState>>,
+             mut ns_app_state: ResMut<NextState<AppState>>,
              mut window_query: Query<&mut Window>,
              mut controller_query: Query<&mut FpsController>| {
-                ns.set(PausedState::Running);
+                ns_paused_state.set(PausedState::Running);
+                ns_app_state.set(AppState::InGame);
 
                 for mut window in &mut window_query {
                     window.cursor_options.grab_mode = CursorGrabMode::Locked;
