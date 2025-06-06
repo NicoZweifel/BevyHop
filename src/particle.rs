@@ -15,8 +15,8 @@ impl Plugin for ParticlePlugin {
 pub(crate) fn setup(mut cmd: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
     let checkpoint_fx: [Handle<EffectAsset>; LEVEL_COUNT] = [
         Resurrect64::DEEP_PURPLE,
-        Resurrect64::DEEP_PURPLE,
-        Resurrect64::DEEP_PURPLE,
+        Resurrect64::CYAN,
+        Resurrect64::SCARLET,
     ]
     .iter()
     .map(|x| effects.add(setup_checkpoint_effect(x.to_linear().to_vec3())))
@@ -26,8 +26,8 @@ pub(crate) fn setup(mut cmd: Commands, mut effects: ResMut<Assets<EffectAsset>>)
 
     let new_level_fx: [Handle<EffectAsset>; LEVEL_COUNT] = [
         Resurrect64::DEEP_PURPLE,
-        Resurrect64::DEEP_PURPLE,
-        Resurrect64::DEEP_PURPLE,
+        Resurrect64::CYAN,
+        Resurrect64::SCARLET,
     ]
     .iter()
     .map(|x| effects.add(setup_new_level_effect(x.to_linear().to_vec3())))
@@ -269,18 +269,14 @@ pub(crate) fn setup_new_level_effect(base_color: Vec3) -> EffectAsset {
         .normalized();
     let init_vel = SetAttributeModifier::new(Attribute::VELOCITY, (center + dir * speed).expr());
 
-    let round = RoundModifier {
-        roundness: writer.lit(1.0).expr(),
-    };
+    let orient = OrientModifier::new(OrientMode::AlongVelocity);
 
-    let orient = OrientModifier::new(OrientMode::ParallelCameraDepthPlane);
-
-    let spawner = SpawnerSettings::once(256.0.into());
+    let spawner = SpawnerSettings::once(1024.0.into());
 
     let mut module = writer.finish();
 
     let tangent_accel =
-        TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(0., 1., 1.), 60.);
+        TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(1., 1., 1.), 60.);
 
     EffectAsset::new(2048, spawner, module)
         .with_name("new_level_effect")
@@ -292,7 +288,6 @@ pub(crate) fn setup_new_level_effect(base_color: Vec3) -> EffectAsset {
         .update(update_drag)
         .update(tangent_accel)
         .update(update_accel)
-        .render(round)
         .render(ColorOverLifetimeModifier {
             gradient: color_gradient1,
             blend: ColorBlendMode::Overwrite,
@@ -364,7 +359,7 @@ pub(crate) fn setup_checkpoint_effect(base_color: Vec3) -> EffectAsset {
         .normalized();
     let init_vel = SetAttributeModifier::new(Attribute::VELOCITY, (center + dir * speed).expr());
 
-    let orient = OrientModifier::new(OrientMode::ParallelCameraDepthPlane);
+    let orient = OrientModifier::new(OrientMode::AlongVelocity);
 
     let spawner = SpawnerSettings::once(512.0.into());
 

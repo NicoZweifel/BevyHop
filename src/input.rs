@@ -1,6 +1,5 @@
 use bevy::{input::mouse::MouseWheel, prelude::*, window::CursorGrabMode};
 
-use bevy_egui::{EguiContexts, EguiPreUpdateSet};
 use bevy_fps_controller::controller::*;
 
 use avian_pickup::prelude::*;
@@ -9,27 +8,33 @@ use crate::core::*;
 
 pub struct InputPlugin;
 
+#[derive(Component)]
+pub struct AutoJump;
+
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((AvianPickupPlugin::default(), FpsControllerPlugin))
-            .add_systems(
-                PreUpdate,
-                (block_mouse_input, block_keyboard_input)
-                    .after(EguiPreUpdateSet::ProcessInput)
-                    .before(EguiPreUpdateSet::BeginPass),
-            )
             .add_systems(
                 Update,
                 (
                     manage_cursor,
                     scroll_events,
+                    handle_auto_jump,
                     handle_reset.before(respawn::<LogicalPlayer>),
                 )
                     .in_set(GameplaySet),
             )
+            .add_systems(OnEnter(AppState::GameOver), enable_cursor)
+            .add_systems(OnEnter(PausedState::Paused), enable_cursor)
+            .add_systems(
+                PreUpdate,
+                auto_jump
+                    .after(fps_controller_input)
+                    .before(fps_controller_move),
+            )
             .add_systems(
                 RunFixedMainLoop,
-                handle_input
+                handle_pickup
                     .in_set(RunFixedMainLoopSystem::BeforeFixedMainLoop)
                     .in_set(GameplaySet),
             );
@@ -43,23 +48,30 @@ fn manage_cursor(
     mut controller_query: Query<&mut FpsController>,
     mut ns: ResMut<NextState<PausedState>>,
 ) {
-    for mut window in &mut window_query {
-        if btn.just_pressed(MouseButton::Left) {
+    if btn.just_pressed(MouseButton::Left) {
+        for mut window in &mut window_query {
             window.cursor_options.grab_mode = CursorGrabMode::Locked;
             window.cursor_options.visible = false;
             for mut controller in &mut controller_query {
                 controller.enable_input = true;
             }
         }
+    }
 
-        if key.just_pressed(KeyCode::Escape) {
-            window.cursor_options.grab_mode = CursorGrabMode::None;
-            window.cursor_options.visible = true;
-            for mut controller in &mut controller_query {
-                controller.enable_input = false;
-            }
+    if key.just_pressed(KeyCode::Escape) {
+        ns.set(PausedState::Paused);
+    }
+}
 
-            ns.set(PausedState::Paused);
+fn enable_cursor(
+    mut window_query: Query<&mut Window>,
+    mut controller_query: Query<&mut FpsController>,
+) {
+    for mut window in &mut window_query {
+        window.cursor_options.grab_mode = CursorGrabMode::None;
+        window.cursor_options.visible = true;
+        for mut controller in &mut controller_query {
+            controller.enable_input = false;
         }
     }
 }
@@ -84,7 +96,7 @@ fn scroll_events(mut er: EventReader<MouseWheel>) {
     }
 }
 
-fn handle_input(
+fn handle_pickup(
     mut ew: EventWriter<AvianPickupInput>,
     keys: Res<ButtonInput<MouseButton>>,
     actors: Query<Entity, With<AvianPickupActor>>,
@@ -96,20 +108,47 @@ fn handle_input(
                 actor,
             });
         }
+
         if keys.just_pressed(MouseButton::Right) {
             ew.write(AvianPickupInput {
                 action: AvianPickupAction::Drop,
                 actor,
             });
         }
+
         if keys.pressed(MouseButton::Right) {
             ew.write(AvianPickupInput {
                 action: AvianPickupAction::Pull,
                 actor,
             });
         }
+    }
+}
 
-        if keys.pressed(MouseButton::Right) {}
+fn auto_jump(mut q_input: Query<&mut FpsControllerInput, With<AutoJump>>) {
+    for mut input in &mut q_input {
+        input.jump = true;
+    }
+}
+
+fn handle_auto_jump(
+    mut cmd: Commands,
+    q_player: Query<(Entity, Option<&AutoJump>), With<FpsControllerInput>>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    {
+        if !keys.just_pressed(KeyCode::Space) || !keys.pressed(KeyCode::ShiftLeft) {
+            return;
+        }
+
+        for (player, auto_jump) in q_player {
+            if auto_jump.is_some() {
+                cmd.entity(player).remove::<AutoJump>();
+                continue;
+            };
+
+            cmd.entity(player).insert(AutoJump);
+        }
     }
 }
 
@@ -119,36 +158,15 @@ fn handle_reset(
     mut history: ResMut<History>,
     q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
 ) {
-    if keys.just_pressed(KeyCode::KeyR) {
-        if keys.pressed(KeyCode::ShiftLeft) {
-            history.0.clear();
-        };
-
-        let spawn_point = history.last(q_gtf);
-
-        ew.write(Respawn::<LogicalPlayer>::new(spawn_point));
-    }
-}
-
-pub fn block_mouse_input(mut mouse: ResMut<ButtonInput<MouseButton>>, mut contexts: EguiContexts) {
-    let Some(context) = contexts.try_ctx_mut() else {
+    if !keys.just_pressed(KeyCode::KeyR) {
         return;
+    }
+
+    if keys.pressed(KeyCode::ShiftLeft) {
+        history.0.clear();
     };
 
-    if context.is_pointer_over_area() || context.wants_pointer_input() {
-        mouse.reset_all();
-    }
-}
+    let spawn_point = history.last(q_gtf);
 
-pub fn block_keyboard_input(
-    mut keyboard_keycode: ResMut<ButtonInput<KeyCode>>,
-    mut contexts: EguiContexts,
-) {
-    let Some(context) = contexts.try_ctx_mut() else {
-        return;
-    };
-
-    if context.wants_keyboard_input() {
-        keyboard_keycode.reset_all();
-    }
+    ew.write(Respawn::<LogicalPlayer>::new(spawn_point));
 }

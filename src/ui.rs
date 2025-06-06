@@ -14,6 +14,8 @@ const PRESSED_BUTTON: Color = Resurrect64::GRAY_PURPLE_1;
 
 const BACKGROUND: Color = Resurrect64::DEEP_PURPLE;
 
+const HUD_TEXT_COLOR: Color = Resurrect64::DARK_PURPLE_1;
+
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
@@ -23,6 +25,7 @@ impl Plugin for UiPlugin {
             WorldInspectorPlugin::default().run_if(in_state(DebugState::Enabled)),
             bevy_console::ConsolePlugin,
         ))
+        .add_systems(Startup, setup_font)
         .add_systems(OnEnter(AppState::InGame), setup_hud)
         .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
         .add_systems(Update, button_system)
@@ -43,8 +46,36 @@ impl Plugin for UiPlugin {
         .add_systems(OnEnter(PausedState::Paused), setup_pause_menu)
         .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>)
         .add_systems(OnEnter(AppState::GameOver), setup_game_over_menu)
-        .add_systems(OnExit(AppState::GameOver), cleanup::<GameOverMenu>);
+        .add_systems(
+            OnExit(AppState::GameOver),
+            (cleanup::<GameOverMenu>, cleanup::<Camera3d>),
+        );
     }
+}
+
+#[derive(Resource)]
+struct FontResource(Handle<Font>);
+
+impl FontResource {
+    fn get(&self) -> Handle<Font> {
+        self.0.clone()
+    }
+
+    fn get_text_font(&self, font_size: f32) -> TextFont {
+        TextFont {
+            font: self.get(),
+            font_size,
+            ..default()
+        }
+    }
+
+    fn get_text_props(&self, font_size: f32) -> (TextFont, TextColor) {
+        (self.get_text_font(font_size), TextColor(HUD_TEXT_COLOR))
+    }
+}
+
+fn setup_font(mut cmd: Commands, asset_server: Res<AssetServer>) {
+    cmd.insert_resource(FontResource(asset_server.load("fira_mono.ttf")));
 }
 
 #[derive(Component)]
@@ -54,18 +85,21 @@ struct Hud;
 struct Speed;
 
 #[derive(Component)]
+struct AutoJumpUi;
+
+#[derive(Component)]
 struct LevelDurationText;
 
 #[derive(Component)]
 struct RunDurationText;
 
-fn setup_hud(mut cmd: Commands, assets: Res<AssetServer>) {
+fn setup_hud(mut cmd: Commands, font: Res<FontResource>) {
     cmd.spawn((
         Node {
             width: Val::Percent(100.),
             height: Val::Percent(100.),
-            flex_direction: FlexDirection::Row,
-            align_items: AlignItems::End,
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Start,
             justify_content: JustifyContent::SpaceBetween,
             padding: UiRect::all(MARGIN),
             row_gap: MARGIN,
@@ -74,34 +108,58 @@ fn setup_hud(mut cmd: Commands, assets: Res<AssetServer>) {
         Hud,
         children![
             (
-                Text(String::from("")),
-                LevelDurationText,
-                TextFont {
-                    font: assets.load("fira_mono.ttf"),
-                    font_size: 24.0,
-                    ..default()
+                Node {
+                    width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    flex_direction: FlexDirection::Row,
+                    align_items: AlignItems::Start,
+                    justify_content: JustifyContent::SpaceBetween,
+                    padding: UiRect::all(MARGIN),
+                    row_gap: MARGIN,
+                    ..Default::default()
                 },
-                TextColor(Color::BLACK)
+                children![
+                    (
+                        Text(String::from("")),
+                        LevelDurationText,
+                        font.get_text_props(24.0),
+                    ),
+                    (
+                        Text(String::from("")),
+                        RunDurationText,
+                        font.get_text_props(24.),
+                    ),
+                ]
             ),
             (
-                Text(String::from("")),
-                Speed,
-                TextFont {
-                    font: assets.load("fira_mono.ttf"),
-                    font_size: 24.0,
-                    ..default()
+                Node {
+                    width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    flex_direction: FlexDirection::Row,
+                    align_items: AlignItems::End,
+                    justify_content: JustifyContent::SpaceBetween,
+                    padding: UiRect::all(MARGIN),
+                    row_gap: MARGIN,
+                    ..Default::default()
                 },
-                TextColor(Color::BLACK)
-            ),
-            (
-                Text(String::from("")),
-                RunDurationText,
-                TextFont {
-                    font: assets.load("fira_mono.ttf"),
-                    font_size: 24.0,
-                    ..default()
-                },
-                TextColor(Color::BLACK)
+                children![
+                    (Text(String::from("")), Speed, font.get_text_props(24.0),),
+                    (
+                        AutoJumpUi,
+                        Node {
+                            flex_direction: FlexDirection::Column,
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            padding: UiRect::all(MARGIN),
+                            ..Default::default()
+                        },
+                        BorderRadius::all(Val::Px(10.)),
+                        children![
+                            (Text::new("Auto-Jump"), font.get_text_props(14.0),),
+                            (Text::new("SHIFT+SPACE"), font.get_text_props(10.0),),
+                        ],
+                    ),
+                ]
             ),
         ],
     ));
@@ -226,6 +284,10 @@ fn setup_pause_menu(mut cmd: Commands, debug_state: Res<State<DebugState>>) {
 struct GameOverMenu;
 
 fn setup_game_over_menu(mut cmd: Commands) {
+    cmd.spawn((
+        Camera3d::default(),
+        Transform::from_translation(Vec3::ZERO.with_y(15.)),
+    ));
     cmd.spawn((
         Node {
             width: Val::Percent(100.),
@@ -421,7 +483,7 @@ fn update_speed_ui(
 ) {
     for velocity in &mut controller_query {
         for mut text in &mut text_query {
-            text.0 = format!("{:.2}", velocity.0.xz().length());
+            text.0 = format!("Speed: {:.2}", velocity.0.xz().length());
         }
     }
 }
@@ -435,7 +497,7 @@ fn update_level_duration_ui(
     stopwatch.0.tick(time.delta());
     let secs = stopwatch.0.elapsed_secs();
 
-    let new_text = format_duration(secs);
+    let new_text = format!("Level: {}", format_duration(secs));
 
     for mut text in &mut text_query {
         text.0 = new_text.clone();
@@ -455,7 +517,7 @@ fn update_run_duration_ui(
         .sum::<f32>()
         + stopwatch.0.elapsed_secs();
 
-    let new_text = format_duration(secs);
+    let new_text = format!("Run: {}", format_duration(secs));
 
     for mut text in &mut text_query {
         text.0 = new_text.clone();

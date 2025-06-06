@@ -160,6 +160,8 @@ fn spawn_world(
     gltf_assets: Res<Assets<Gltf>>,
     q_camera: Query<Entity, With<Camera3d>>,
     mut water_settings: ResMut<WaterSettings>,
+    q_player: Query<Entity, With<LogicalPlayer>>,
+    fx: Res<ParticleEffects>,
 ) {
     if main_scene.is_spawned {
         return;
@@ -194,6 +196,16 @@ fn spawn_world(
         3 => Resurrect64::DARK_RED_1,
         _ => Resurrect64::DARK_CYAN,
     };
+
+    for player in &q_player {
+        cmd.entity(player).with_child((
+            ParticleEffect::new(fx.get_new_level_fx(current_level.get())),
+            Visibility::Visible,
+            Lifetime {
+                timer: Timer::from_seconds(2., TimerMode::Once),
+            },
+        ));
+    }
 }
 
 fn prop_colliders(
@@ -331,30 +343,16 @@ fn end_colliders(
                 CollisionEventsEnabled,
             ))
             .observe(
-                |trigger: Trigger<OnCollisionStart>,
-                 mut cmd: Commands,
+                |_: Trigger<OnCollisionStart>,
                  current_lvl: Res<CurrentLevel>,
                  mut ns: ResMut<NextState<AppState>>,
-                 mut ew: EventWriter<SpawnLevel>,
-                 fx: Res<ParticleEffects>| {
-                    let other_entity = trigger.collider;
-
+                 mut ew: EventWriter<SpawnLevel>| {
                     let next_level = current_lvl.get().get() + 1;
 
                     if next_level > LEVEL_COUNT {
                         ns.set(AppState::GameOver);
                         return;
                     }
-
-                    cmd.entity(other_entity).with_child((
-                        ParticleEffect::new(
-                            fx.get_new_level_fx(NonZeroUsize::new(next_level).unwrap()),
-                        ),
-                        Visibility::Visible,
-                        Lifetime {
-                            timer: Timer::from_seconds(2., TimerMode::Once),
-                        },
-                    ));
 
                     ew.write(SpawnLevel(NonZeroUsize::new(next_level).unwrap()));
                 },
