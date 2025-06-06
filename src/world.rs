@@ -9,6 +9,7 @@ use std::{f32::consts::TAU, num::NonZeroUsize};
 
 use crate::color::Resurrect64;
 use crate::core::*;
+use crate::prelude::{LevelDuration, RunDuration};
 use crate::state::*;
 
 pub struct WorldPlugin;
@@ -83,20 +84,24 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
 
     commands.spawn((
         DirectionalLight {
-            illuminance: light_consts::lux::FULL_DAYLIGHT,
+            illuminance: light_consts::lux::DIRECT_SUNLIGHT,
             shadows_enabled: true,
             ..default()
         },
-        Transform::from_xyz(4.0, 7.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(4.0, 7.0, -4.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
     commands.insert_resource(MainScene {
         levels: (1..=LEVEL_COUNT)
             .map(|x| assets.load(format!("level{:?}.glb", x)) as Handle<Gltf>)
-            .collect(),
+            .collect::<Vec<Handle<Gltf>>>()
+            .try_into()
+            .unwrap(),
         skyboxes: (1..=LEVEL_COUNT)
             .map(|x| assets.load(format!("skybox_{:?}_skybox.ktx2", x)) as Handle<Image>)
-            .collect(),
+            .collect::<Vec<Handle<Image>>>()
+            .try_into()
+            .unwrap(),
         is_spawned: false,
     });
 
@@ -122,9 +127,9 @@ fn translate_water(
 
 #[derive(Resource)]
 struct MainScene {
-    levels: Vec<Handle<Gltf>>,
+    levels: [Handle<Gltf>; LEVEL_COUNT],
     is_spawned: bool,
-    skyboxes: Vec<Handle<Image>>,
+    skyboxes: [Handle<Image>; LEVEL_COUNT],
 }
 
 impl MainScene {
@@ -138,7 +143,7 @@ impl MainScene {
 }
 
 #[derive(Resource)]
-struct CurrentLevel(pub NonZeroUsize);
+pub struct CurrentLevel(pub NonZeroUsize);
 
 impl CurrentLevel {
     fn get(&self) -> NonZeroUsize {
@@ -325,7 +330,8 @@ fn spawn_level(
     mut cmd: Commands,
     mut history: ResMut<History>,
     scene: Single<Entity, With<SceneRoot>>,
-
+    level_duration: Res<LevelDuration>,
+    mut run_duration: ResMut<RunDuration>,
     mut current_level: ResMut<CurrentLevel>,
     mut main_scene: ResMut<MainScene>,
     mut er: EventReader<SpawnLevel>,
@@ -337,6 +343,8 @@ fn spawn_level(
 
     for e in er.read() {
         history.0.clear();
+
+        run_duration.results[current_level.get().get() - 1] = level_duration.0.elapsed();
 
         current_level.0 = e.0;
         main_scene.is_spawned = false;

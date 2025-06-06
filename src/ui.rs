@@ -4,7 +4,11 @@ use bevy_egui::EguiPlugin;
 use bevy_fps_controller::controller::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-use crate::{core::*, prelude::LevelDuration, state::*};
+use crate::{
+    core::*,
+    prelude::{LevelDuration, RunDuration},
+    state::*,
+};
 
 pub struct UiPlugin;
 
@@ -36,7 +40,12 @@ impl Plugin for UiPlugin {
         .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
         .add_systems(
             Update,
-            (update_speed_ui, update_time_ui).in_set(GameplaySet),
+            (
+                update_speed_ui,
+                update_level_duration_ui,
+                update_run_duration_ui,
+            )
+                .in_set(GameplaySet),
         )
         .add_systems(OnEnter(AppState::MainMenu), setup_main_menu)
         .add_systems(
@@ -55,7 +64,10 @@ struct Hud;
 struct Speed;
 
 #[derive(Component)]
-struct Duration;
+struct LevelDurationText;
+
+#[derive(Component)]
+struct RunDurationText;
 
 fn setup_hud(mut cmd: Commands, assets: Res<AssetServer>) {
     cmd.spawn((
@@ -73,7 +85,7 @@ fn setup_hud(mut cmd: Commands, assets: Res<AssetServer>) {
         children![
             (
                 Text(String::from("")),
-                Duration,
+                LevelDurationText,
                 TextFont {
                     font: assets.load("fira_mono.ttf"),
                     font_size: 24.0,
@@ -90,7 +102,17 @@ fn setup_hud(mut cmd: Commands, assets: Res<AssetServer>) {
                     ..default()
                 },
                 TextColor(Color::BLACK)
-            )
+            ),
+            (
+                Text(String::from("")),
+                RunDurationText,
+                TextFont {
+                    font: assets.load("fira_mono.ttf"),
+                    font_size: 24.0,
+                    ..default()
+                },
+                TextColor(Color::BLACK)
+            ),
         ],
     ));
 }
@@ -101,6 +123,8 @@ const MARGIN: Val = Val::Px(12.);
 struct PauseMenu;
 
 fn setup_pause_menu(mut cmd: Commands) {
+    let button_colors = ButtonColors::default();
+
     cmd.spawn((
         Node {
             width: Val::Percent(100.),
@@ -114,46 +138,44 @@ fn setup_pause_menu(mut cmd: Commands) {
         },
         PauseMenu,
     ))
-    .with_children(|children| {
-        let button_colors = ButtonColors::default();
-        children
-            .spawn((
-                Button,
-                Node {
-                    width: Val::Px(140.0),
-                    height: Val::Px(50.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..Default::default()
-                },
-                BackgroundColor(button_colors.normal),
-                button_colors,
-            ))
-            .observe(
-                |_: Trigger<Pointer<Click>>,
-                 mut ns: ResMut<NextState<PausedState>>,
-
-                 mut window_query: Query<&mut Window>,
-                 mut controller_query: Query<&mut FpsController>| {
-                    ns.set(PausedState::Running);
-
-                    for mut window in &mut window_query {
-                        window.cursor_options.grab_mode = CursorGrabMode::Locked;
-                        window.cursor_options.visible = false;
-                        for mut controller in &mut controller_query {
-                            controller.enable_input = true;
-                        }
-                    }
-                },
-            )
-            .with_child((
+    .with_children(|cmd| {
+        cmd.spawn((
+            Button,
+            Node {
+                width: Val::Px(140.0),
+                height: Val::Px(50.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            BackgroundColor(button_colors.normal),
+            button_colors,
+            children![(
                 Text::new("Resume"),
                 TextFont {
                     font_size: 40.0,
                     ..default()
                 },
                 TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
-            ));
+            )],
+        ))
+        .observe(
+            |_: Trigger<Pointer<Click>>,
+             mut ns: ResMut<NextState<PausedState>>,
+
+             mut window_query: Query<&mut Window>,
+             mut controller_query: Query<&mut FpsController>| {
+                ns.set(PausedState::Running);
+
+                for mut window in &mut window_query {
+                    window.cursor_options.grab_mode = CursorGrabMode::Locked;
+                    window.cursor_options.visible = false;
+                    for mut controller in &mut controller_query {
+                        controller.enable_input = true;
+                    }
+                }
+            },
+        );
     });
 }
 
@@ -194,6 +216,14 @@ fn setup_main_menu(mut cmd: Commands) {
                 },
                 BackgroundColor(button_colors.normal),
                 button_colors,
+                children![(
+                    Text::new("Play"),
+                    TextFont {
+                        font_size: 40.0,
+                        ..default()
+                    },
+                    TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+                )],
             ))
             .observe(
                 |_: Trigger<Pointer<Click>>,
@@ -211,15 +241,7 @@ fn setup_main_menu(mut cmd: Commands) {
                         }
                     }
                 },
-            )
-            .with_child((
-                Text::new("Play"),
-                TextFont {
-                    font_size: 40.0,
-                    ..default()
-                },
-                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
-            ));
+            );
     });
 }
 
@@ -234,20 +256,45 @@ fn update_speed_ui(
     }
 }
 
-fn update_time_ui(
+fn update_level_duration_ui(
     duration: ResMut<LevelDuration>,
-    mut text_query: Query<&mut Text, With<Duration>>,
+    mut text_query: Query<&mut Text, With<LevelDurationText>>,
     time: Res<Time>,
 ) {
     let stopwatch = duration.into_inner();
     stopwatch.0.tick(time.delta());
     let secs = stopwatch.0.elapsed_secs();
 
+    let new_text = format_duration(secs);
+
+    for mut text in &mut text_query {
+        text.0 = new_text.clone();
+    }
+}
+
+fn update_run_duration_ui(
+    run_duration: Res<RunDuration>,
+    level_duration: Res<LevelDuration>,
+    mut text_query: Query<&mut Text, With<RunDurationText>>,
+) {
+    let stopwatch = level_duration.into_inner();
+    let secs = run_duration
+        .results
+        .iter()
+        .map(|x| x.as_secs_f32())
+        .sum::<f32>()
+        + stopwatch.0.elapsed_secs();
+
+    let new_text = format_duration(secs);
+
+    for mut text in &mut text_query {
+        text.0 = new_text.clone();
+    }
+}
+
+fn format_duration(secs: f32) -> String {
     let h = secs / 3600.;
     let m = (secs % 3600.) / 60.;
     let s = secs % 60.;
-
-    for mut text in &mut text_query {
-        text.0 = format!("{:02.0}:{:02.0}:{:02.0}", h, m, s);
-    }
+    format!("{:02.0}:{:02.0}:{:02.0}", h, m, s)
 }
