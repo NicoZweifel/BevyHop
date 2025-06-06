@@ -1,4 +1,4 @@
-use avian3d::prelude::{Physics, PhysicsGizmos, PhysicsTime};
+use avian3d::prelude::*;
 use bevy::prelude::*;
 
 pub struct StatePlugin;

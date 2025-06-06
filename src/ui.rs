@@ -1,31 +1,18 @@
 use avian3d::prelude::*;
-use bevy::{color::palettes::tailwind, prelude::*, window::CursorGrabMode};
+use bevy::{prelude::*, window::CursorGrabMode};
 use bevy_egui::EguiPlugin;
 use bevy_fps_controller::controller::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-use crate::{
-    core::*,
-    prelude::{LevelDuration, RunDuration},
-    state::*,
-};
+use crate::prelude::*;
 
 pub struct UiPlugin;
 
-#[derive(Component)]
-struct ButtonColors {
-    normal: Color,
-    hovered: Color,
-}
+const NORMAL_BUTTON: Color = Resurrect64::DARK_PURPLE_1;
+const HOVERED_BUTTON: Color = Resurrect64::DARK_PURPLE_2;
+const PRESSED_BUTTON: Color = Resurrect64::GRAY_PURPLE_1;
 
-impl Default for ButtonColors {
-    fn default() -> Self {
-        ButtonColors {
-            normal: Color::linear_rgb(0.15, 0.15, 0.15),
-            hovered: Color::linear_rgb(0.25, 0.25, 0.25),
-        }
-    }
-}
+const BACKGROUND: Color = Resurrect64::DEEP_PURPLE;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
@@ -38,6 +25,7 @@ impl Plugin for UiPlugin {
         ))
         .add_systems(OnEnter(AppState::InGame), setup_hud)
         .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
+        .add_systems(Update, button_system)
         .add_systems(
             Update,
             (
@@ -53,7 +41,9 @@ impl Plugin for UiPlugin {
             (cleanup::<MainMenu>, cleanup::<Camera3d>),
         )
         .add_systems(OnEnter(PausedState::Paused), setup_pause_menu)
-        .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>);
+        .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>)
+        .add_systems(OnEnter(AppState::GameOver), setup_game_over_menu)
+        .add_systems(OnExit(AppState::GameOver), cleanup::<GameOverMenu>);
     }
 }
 
@@ -122,9 +112,7 @@ const MARGIN: Val = Val::Px(12.);
 #[derive(Component)]
 struct PauseMenu;
 
-fn setup_pause_menu(mut cmd: Commands) {
-    let button_colors = ButtonColors::default();
-
+fn setup_pause_menu(mut cmd: Commands, debug_state: Res<State<DebugState>>) {
     cmd.spawn((
         Node {
             width: Val::Percent(100.),
@@ -134,22 +122,26 @@ fn setup_pause_menu(mut cmd: Commands) {
             justify_items: JustifyItems::Center,
             padding: UiRect::all(MARGIN),
             row_gap: MARGIN,
+            column_gap: MARGIN,
             ..Default::default()
         },
         PauseMenu,
+        BackgroundColor(BACKGROUND.with_alpha(match debug_state.get() {
+            DebugState::Disabled => 0.5,
+            DebugState::Enabled => 0.,
+        })),
     ))
     .with_children(|cmd| {
         cmd.spawn((
             Button,
             Node {
-                width: Val::Px(140.0),
-                height: Val::Px(50.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
+                padding: UiRect::all(MARGIN),
+                margin: UiRect::bottom(MARGIN),
                 ..Default::default()
             },
-            BackgroundColor(button_colors.normal),
-            button_colors,
+            BorderRadius::all(Val::Px(10.)),
             children![(
                 Text::new("Resume"),
                 TextFont {
@@ -176,6 +168,164 @@ fn setup_pause_menu(mut cmd: Commands) {
                 }
             },
         );
+
+        cmd.spawn((
+            Button,
+            Node {
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(MARGIN),
+
+                ..Default::default()
+            },
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Main Menu"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+            )],
+        ))
+        .observe(
+            |_: Trigger<Pointer<Click>>,
+             mut ns_app_state: ResMut<NextState<AppState>>,
+             mut ns_paused: ResMut<NextState<PausedState>>| {
+                ns_app_state.set(AppState::MainMenu);
+                ns_paused.set(PausedState::Running);
+            },
+        );
+
+        cmd.spawn((
+            Button,
+            Node {
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(MARGIN),
+
+                ..Default::default()
+            },
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Quit"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+            )],
+        ))
+        .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+            ew.send(AppExit::Success);
+        });
+    });
+}
+
+#[derive(Component)]
+struct GameOverMenu;
+
+fn setup_game_over_menu(mut cmd: Commands) {
+    cmd.spawn((
+        Node {
+            width: Val::Percent(100.),
+            height: Val::Percent(100.),
+            flex_direction: FlexDirection::Column,
+            align_items: AlignItems::Center,
+            justify_items: JustifyItems::Center,
+            padding: UiRect::all(MARGIN),
+            row_gap: MARGIN,
+            column_gap: MARGIN,
+            ..Default::default()
+        },
+        GameOverMenu,
+        BackgroundColor(BACKGROUND),
+    ))
+    .with_children(|cmd| {
+        cmd.spawn((
+            Button,
+            Node {
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(MARGIN),
+
+                margin: UiRect::bottom(MARGIN),
+                ..Default::default()
+            },
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Restart"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+            )],
+        ))
+        .observe(
+            |_: Trigger<Pointer<Click>>,
+             mut ns: ResMut<NextState<PausedState>>,
+
+             mut window_query: Query<&mut Window>,
+             mut controller_query: Query<&mut FpsController>| {
+                ns.set(PausedState::Running);
+
+                for mut window in &mut window_query {
+                    window.cursor_options.grab_mode = CursorGrabMode::Locked;
+                    window.cursor_options.visible = false;
+                    for mut controller in &mut controller_query {
+                        controller.enable_input = true;
+                    }
+                }
+            },
+        );
+        cmd.spawn((
+            Button,
+            Node {
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(MARGIN),
+
+                ..Default::default()
+            },
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Main Menu"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+            )],
+        ))
+        .observe(
+            |_: Trigger<Pointer<Click>>, mut ns: ResMut<NextState<AppState>>| {
+                ns.set(AppState::MainMenu);
+            },
+        );
+
+        cmd.spawn((
+            Button,
+            Node {
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(MARGIN),
+
+                ..Default::default()
+            },
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Quit"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
+                },
+                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+            )],
+        ))
+        .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+            ew.send(AppExit::Success);
+        });
     });
 }
 
@@ -188,8 +338,8 @@ fn setup_main_menu(mut cmd: Commands) {
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
     ));
     cmd.spawn((
+        BackgroundColor(BACKGROUND),
         Node {
-            // fill the entire window
             width: Val::Percent(100.),
             height: Val::Percent(100.),
             flex_direction: FlexDirection::Column,
@@ -197,51 +347,71 @@ fn setup_main_menu(mut cmd: Commands) {
             justify_items: JustifyItems::Center,
             padding: UiRect::all(MARGIN),
             row_gap: MARGIN,
+            column_gap: MARGIN,
             ..Default::default()
         },
         MainMenu,
-        BackgroundColor(Color::from(tailwind::GRAY_500)),
     ))
-    .with_children(|children| {
-        let button_colors = ButtonColors::default();
-        children
-            .spawn((
-                Button,
-                Node {
-                    width: Val::Px(140.0),
-                    height: Val::Px(50.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..Default::default()
+    .with_children(|cmd| {
+        cmd.spawn((
+            Button,
+            Node {
+                padding: UiRect::all(MARGIN),
+                margin: UiRect::bottom(MARGIN),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..Default::default()
+            },
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Play"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
                 },
-                BackgroundColor(button_colors.normal),
-                button_colors,
-                children![(
-                    Text::new("Play"),
-                    TextFont {
-                        font_size: 40.0,
-                        ..default()
-                    },
-                    TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
-                )],
-            ))
-            .observe(
-                |_: Trigger<Pointer<Click>>,
-                 mut ns: ResMut<NextState<AppState>>,
+                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+            )],
+        ))
+        .observe(
+            |_: Trigger<Pointer<Click>>,
+             mut ns: ResMut<NextState<AppState>>,
 
-                 mut window_query: Query<&mut Window>,
-                 mut controller_query: Query<&mut FpsController>| {
-                    ns.set(AppState::InGame);
+             mut window_query: Query<&mut Window>,
+             mut controller_query: Query<&mut FpsController>| {
+                ns.set(AppState::InGame);
 
-                    for mut window in &mut window_query {
-                        window.cursor_options.grab_mode = CursorGrabMode::Locked;
-                        window.cursor_options.visible = false;
-                        for mut controller in &mut controller_query {
-                            controller.enable_input = true;
-                        }
+                for mut window in &mut window_query {
+                    window.cursor_options.grab_mode = CursorGrabMode::Locked;
+                    window.cursor_options.visible = false;
+                    for mut controller in &mut controller_query {
+                        controller.enable_input = true;
                     }
+                }
+            },
+        );
+
+        cmd.spawn((
+            Button,
+            Node {
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                padding: UiRect::all(MARGIN),
+
+                ..Default::default()
+            },
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Quit"),
+                TextFont {
+                    font_size: 40.0,
+                    ..default()
                 },
-            );
+                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+            )],
+        ))
+        .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+            ew.send(AppExit::Success);
+        });
     });
 }
 
@@ -297,4 +467,32 @@ fn format_duration(secs: f32) -> String {
     let m = (secs % 3600.) / 60.;
     let s = secs % 60.;
     format!("{:02.0}:{:02.0}:{:02.0}", h, m, s)
+}
+
+fn button_system(
+    mut interaction_query: Query<
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            &Children,
+        ),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut text_query: Query<&mut Text>,
+) {
+    for (interaction, mut color, mut border_color, children) in &mut interaction_query {
+        let mut text = text_query.get_mut(children[0]).unwrap();
+        match *interaction {
+            Interaction::Pressed => {
+                *color = PRESSED_BUTTON.into();
+            }
+            Interaction::Hovered => {
+                *color = HOVERED_BUTTON.into();
+            }
+            Interaction::None => {
+                *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
 }

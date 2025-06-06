@@ -5,10 +5,10 @@ use std::f32::consts::TAU;
 use avian_pickup::actor::*;
 use avian3d::prelude::*;
 use bevy::{
-    core_pipeline::Skybox,
-    pbr::{NotShadowCaster, NotShadowReceiver},
+    core_pipeline::{bloom::Bloom, tonemapping::Tonemapping},
+    pbr::{NotShadowCaster, NotShadowReceiver, VolumetricFog},
     prelude::*,
-    render::camera::Exposure,
+    render::{camera::Exposure, view::ColorGrading},
 };
 use bevy_fps_controller::controller::*;
 
@@ -24,7 +24,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn setup(mut cmd: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut cmd: Commands) {
     // Note that we have two entities for the player
     // One is a "logical" player that handles the physics computation and collision
     // The other is a "render" player that is what is displayed to the user
@@ -94,7 +94,18 @@ fn setup(mut cmd: Commands, asset_server: Res<AssetServer>) {
         .id();
 
     cmd.spawn((
+        Camera {
+            hdr: true,
+            ..default()
+        },
         Camera3d::default(),
+        ColorGrading::default(),
+        Bloom::NATURAL,
+        Tonemapping::TonyMcMapface,
+        VolumetricFog {
+            ambient_intensity: 0.1,
+            ..default()
+        },
         Projection::Perspective(PerspectiveProjection {
             fov: TAU / 5.0,
             ..default()

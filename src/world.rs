@@ -1,6 +1,5 @@
 use avian3d::prelude::*;
 use bevy::core_pipeline::Skybox;
-use bevy::ecs::entity;
 use bevy::{gltf::Gltf, prelude::*, scene::SceneInstanceReady};
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::ParticleEffect;
@@ -9,7 +8,7 @@ use std::{f32::consts::TAU, num::NonZeroUsize};
 
 use crate::color::Resurrect64;
 use crate::core::*;
-use crate::prelude::{LevelDuration, RunDuration};
+use crate::duration::*;
 use crate::state::*;
 
 pub struct WorldPlugin;
@@ -27,7 +26,6 @@ impl Plugin for WorldPlugin {
         app.register_type::<Sun>()
             .insert_resource(WaterSettings {
                 height: WATER_HEIGHT,
-
                 ..default()
             })
             .add_plugins(WaterPlugin)
@@ -56,6 +54,10 @@ impl Plugin for WorldPlugin {
             .add_systems(
                 FixedUpdate,
                 (cleanup_timed::<SpeedBoost>).in_set(GameplaySet),
+            )
+            .add_systems(
+                OnExit(AppState::InGame),
+                (cleanup::<SceneRoot>, reset_world),
             )
             .add_systems(Update, rotate_speed_boost.in_set(GameplaySet))
             .add_observer(
@@ -106,6 +108,11 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
     });
 
     commands.insert_resource(CurrentLevel(NonZeroUsize::MIN));
+}
+
+fn reset_world(mut world: ResMut<MainScene>, mut current_level: ResMut<CurrentLevel>) {
+    world.is_spawned = false;
+    current_level.0 = NonZeroUsize::MIN;
 }
 
 fn setup_water(mut q_water: Query<&mut Transform, (With<WaterTiles>, Without<Ready>)>) {
@@ -177,8 +184,8 @@ fn spawn_world(
         cmd.entity(entity).remove::<Skybox>().insert(Skybox {
             image: skybox_handle.clone(),
             brightness: match current_level.get().get() {
-                1 => 50000.,
-                2 => 30000.,
+                1 => 30000.,
+                2 => 50000.,
                 3 => 50000.,
                 _ => 10000.,
             },
@@ -187,8 +194,8 @@ fn spawn_world(
     }
 
     water_settings.deep_color = match current_level.get().get() {
-        1 => Resurrect64::CYAN,
-        2 => Resurrect64::PURPLE,
+        1 => Resurrect64::DEEP_PURPLE,
+        2 => Resurrect64::DARK_CYAN,
         3 => Resurrect64::DARK_SCARLET,
         _ => Resurrect64::DARK_CYAN,
     };
@@ -290,8 +297,21 @@ fn checkpoint_colliders(
                 CollisionEventsEnabled,
             ))
             .observe(
-                |trigger: Trigger<OnCollisionStart>, mut history: ResMut<History>| {
+                |trigger: Trigger<OnCollisionStart>,
+                 mut cmd: Commands,
+                 mut history: ResMut<History>,
+                 fx: Res<ParticleEffects>| {
                     history.0.push(trigger.target());
+
+                    let other_entity = trigger.collider;
+
+                    cmd.entity(other_entity).with_child((
+                        ParticleEffect::new(fx.checkpoint_effect.clone()),
+                        Visibility::Visible,
+                        Lifetime {
+                            timer: Timer::from_seconds(2., TimerMode::Once),
+                        },
+                    ));
                 },
             );
     }
@@ -315,12 +335,29 @@ fn end_colliders(
                 CollisionEventsEnabled,
             ))
             .observe(
-                |_: Trigger<OnCollisionStart>,
+                |trigger: Trigger<OnCollisionStart>,
+                 mut cmd: Commands,
                  current_level: Res<CurrentLevel>,
-                 mut ew: EventWriter<SpawnLevel>| {
-                    ew.write(SpawnLevel(
-                        NonZeroUsize::new(current_level.get().get() + 1).unwrap(),
+                 mut ns: ResMut<NextState<AppState>>,
+                 mut ew: EventWriter<SpawnLevel>,
+                 fx: Res<ParticleEffects>| {
+                    let other_entity = trigger.collider;
+
+                    cmd.entity(other_entity).with_child((
+                        ParticleEffect::new(fx.new_level_effect.clone()),
+                        Visibility::Visible,
+                        Lifetime {
+                            timer: Timer::from_seconds(2., TimerMode::Once),
+                        },
                     ));
+
+                    let next_level = current_level.get().get() + 1;
+                    if next_level > LEVEL_COUNT {
+                        ns.set(AppState::GameOver);
+                        return;
+                    }
+
+                    ew.write(SpawnLevel(NonZeroUsize::new(next_level).unwrap()));
                 },
             );
     }
@@ -335,7 +372,8 @@ fn spawn_level(
     mut current_level: ResMut<CurrentLevel>,
     mut main_scene: ResMut<MainScene>,
     mut er: EventReader<SpawnLevel>,
-    mut q_player: Query<&mut Transform, With<LogicalPlayer>>,
+    mut q_player: Query<(Entity, &mut Transform), With<LogicalPlayer>>,
+    fx: Res<ParticleEffects>,
 ) {
     let spawn_point = SPAWN_POINT;
 
@@ -351,8 +389,16 @@ fn spawn_level(
 
         cmd.entity(scene).despawn();
 
-        for mut transform in &mut q_player {
-            transform.translation = spawn_point
+        for (player, mut transform) in &mut q_player {
+            transform.translation = spawn_point;
+
+            cmd.entity(player).with_child((
+                ParticleEffect::new(fx.new_level_effect.clone()),
+                Visibility::Visible,
+                Lifetime {
+                    timer: Timer::from_seconds(2., TimerMode::Once),
+                },
+            ));
         }
     }
 }

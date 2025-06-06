@@ -109,6 +109,8 @@ pub struct ParticleEffects {
     pub boost_effect: Handle<EffectAsset>,
     pub boost_idle_effect: Handle<EffectAsset>,
     pub player_boost_effect: Handle<EffectAsset>,
+    pub new_level_effect: Handle<EffectAsset>,
+    pub checkpoint_effect: Handle<EffectAsset>,
 }
 
 pub struct CorePlugin;
