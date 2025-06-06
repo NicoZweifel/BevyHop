@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_fps_controller::controller::LogicalPlayer;
 
-use crate::{core::*, world::LEVEL_COUNT};
+use crate::core::*;
 
 #[derive(Resource, Reflect, Debug, Default)]
 pub struct LevelDuration(pub Stopwatch);

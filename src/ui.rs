@@ -217,7 +217,7 @@ fn setup_pause_menu(mut cmd: Commands, debug_state: Res<State<DebugState>>) {
             )],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-            ew.send(AppExit::Success);
+            ew.write(AppExit::Success);
         });
     });
 }
@@ -324,7 +324,7 @@ fn setup_game_over_menu(mut cmd: Commands) {
             )],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-            ew.send(AppExit::Success);
+            ew.write(AppExit::Success);
         });
     });
 }
@@ -410,7 +410,7 @@ fn setup_main_menu(mut cmd: Commands) {
             )],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-            ew.send(AppExit::Success);
+            ew.write(AppExit::Success);
         });
     });
 }
@@ -471,18 +471,11 @@ fn format_duration(secs: f32) -> String {
 
 fn button_system(
     mut interaction_query: Query<
-        (
-            &Interaction,
-            &mut BackgroundColor,
-            &mut BorderColor,
-            &Children,
-        ),
+        (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
     >,
-    mut text_query: Query<&mut Text>,
 ) {
-    for (interaction, mut color, mut border_color, children) in &mut interaction_query {
-        let mut text = text_query.get_mut(children[0]).unwrap();
+    for (interaction, mut color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
                 *color = PRESSED_BUTTON.into();

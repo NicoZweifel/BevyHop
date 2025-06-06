@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_hanabi::*;
 
-use crate::core::*;
+use crate::{color::Resurrect64, core::*};
 
 pub struct ParticlePlugin;
 impl Plugin for ParticlePlugin {
@@ -13,12 +13,34 @@ impl Plugin for ParticlePlugin {
 }
 
 pub(crate) fn setup(mut cmd: Commands, mut effects: ResMut<Assets<EffectAsset>>) {
+    let checkpoint_fx: [Handle<EffectAsset>; LEVEL_COUNT] = [
+        Resurrect64::DEEP_PURPLE,
+        Resurrect64::DEEP_PURPLE,
+        Resurrect64::DEEP_PURPLE,
+    ]
+    .iter()
+    .map(|x| effects.add(setup_checkpoint_effect(x.to_linear().to_vec3())))
+    .collect::<Vec<Handle<EffectAsset>>>()
+    .try_into()
+    .unwrap();
+
+    let new_level_fx: [Handle<EffectAsset>; LEVEL_COUNT] = [
+        Resurrect64::DEEP_PURPLE,
+        Resurrect64::DEEP_PURPLE,
+        Resurrect64::DEEP_PURPLE,
+    ]
+    .iter()
+    .map(|x| effects.add(setup_new_level_effect(x.to_linear().to_vec3())))
+    .collect::<Vec<Handle<EffectAsset>>>()
+    .try_into()
+    .unwrap();
+
     cmd.insert_resource(ParticleEffects {
-        boost_effect: effects.add(setup_boost_effect()),
-        boost_idle_effect: effects.add(setup_boost_idle_effect()),
-        player_boost_effect: effects.add(setup_player_boost_effect()),
-        new_level_effect: effects.add(setup_new_level_effect()),
-        checkpoint_effect: effects.add(setup_checkpoint_effect()),
+        boost_fx: effects.add(setup_boost_effect()),
+        boost_idle_fx: effects.add(setup_boost_idle_effect()),
+        player_boost_fx: effects.add(setup_player_boost_effect()),
+        new_level_fx,
+        checkpoint_fx,
     });
 }
 
@@ -188,12 +210,21 @@ pub(crate) fn setup_player_boost_effect() -> EffectAsset {
         .render(orient)
 }
 
-pub(crate) fn setup_new_level_effect() -> EffectAsset {
+pub(crate) fn setup_new_level_effect(base_color: Vec3) -> EffectAsset {
     let mut color_gradient1 = Gradient::new();
 
-    color_gradient1.add_key(0.0, Vec4::new(0.283153, 0.708391, 0.141266, 0.8));
-    color_gradient1.add_key(0.5, Vec4::new(0.14, 0.35, 0.07, 0.5));
-    color_gradient1.add_key(1.0, Vec4::new(0.0, 0.1, 0., 0.0));
+    color_gradient1.add_key(
+        0.0,
+        Vec4::new(base_color.x, base_color.y, base_color.z, 0.5),
+    );
+    color_gradient1.add_key(
+        0.5,
+        Vec4::new(base_color.x, base_color.y, base_color.z, 0.25),
+    );
+    color_gradient1.add_key(
+        1.0,
+        Vec4::new(base_color.x, base_color.y, base_color.z, 0.0),
+    );
 
     let mut size_gradient1 = Gradient::new();
     size_gradient1.add_key(0.0, Vec3::splat(2.0));
@@ -274,12 +305,21 @@ pub(crate) fn setup_new_level_effect() -> EffectAsset {
         .render(orient)
 }
 
-pub(crate) fn setup_checkpoint_effect() -> EffectAsset {
+pub(crate) fn setup_checkpoint_effect(base_color: Vec3) -> EffectAsset {
     let mut color_gradient1 = Gradient::new();
 
-    color_gradient1.add_key(0.0, Vec4::new(0.283153, 0.708391, 0.141266, 0.8));
-    color_gradient1.add_key(0.5, Vec4::new(0.14, 0.35, 0.07, 0.5));
-    color_gradient1.add_key(1.0, Vec4::new(0.0, 0.1, 0., 0.0));
+    color_gradient1.add_key(
+        0.0,
+        Vec4::new(base_color.x, base_color.y, base_color.z, 0.5),
+    );
+    color_gradient1.add_key(
+        0.5,
+        Vec4::new(base_color.x, base_color.y, base_color.z, 0.25),
+    );
+    color_gradient1.add_key(
+        1.0,
+        Vec4::new(base_color.x, base_color.y, base_color.z, 0.0),
+    );
 
     let mut size_gradient1 = Gradient::new();
     size_gradient1.add_key(0.0, Vec3::splat(2.0));
@@ -324,18 +364,14 @@ pub(crate) fn setup_checkpoint_effect() -> EffectAsset {
         .normalized();
     let init_vel = SetAttributeModifier::new(Attribute::VELOCITY, (center + dir * speed).expr());
 
-    let round = RoundModifier {
-        roundness: writer.lit(1.0).expr(),
-    };
-
     let orient = OrientModifier::new(OrientMode::ParallelCameraDepthPlane);
 
-    let spawner = SpawnerSettings::once(256.0.into());
+    let spawner = SpawnerSettings::once(512.0.into());
 
     let mut module = writer.finish();
 
     let tangent_accel =
-        TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(0., 1., 1.), 60.);
+        TangentAccelModifier::constant(&mut module, Vec3::ZERO, Vec3::new(1., 0., 0.), 40.);
 
     EffectAsset::new(2048, spawner, module)
         .with_name("checkpoint_effect")
@@ -347,7 +383,6 @@ pub(crate) fn setup_checkpoint_effect() -> EffectAsset {
         .update(update_drag)
         .update(tangent_accel)
         .update(update_accel)
-        .render(round)
         .render(ColorOverLifetimeModifier {
             gradient: color_gradient1,
             blend: ColorBlendMode::Overwrite,

@@ -1,5 +1,3 @@
-use crate::{core::*, state::*};
-
 use std::f32::consts::TAU;
 
 use avian_pickup::actor::*;
@@ -11,6 +9,8 @@ use bevy::{
     render::{camera::Exposure, view::ColorGrading},
 };
 use bevy_fps_controller::controller::*;
+
+use crate::core::*;
 
 pub struct PlayerPlugin;
 
@@ -79,6 +79,8 @@ fn setup(mut cmd: Commands) {
                     ..default()
                 },
                 FpsController {
+                    fly_speed: 50.,
+                    fast_fly_speed: 100.,
                     air_acceleration: 20.,
                     max_air_speed: 100.,
                     air_speed_cap: 10.,

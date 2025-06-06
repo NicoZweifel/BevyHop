@@ -5,7 +5,7 @@ use bevy_fps_controller::controller::*;
 
 use avian_pickup::prelude::*;
 
-use crate::{core::*, state::*};
+use crate::core::*;
 
 pub struct InputPlugin;
 

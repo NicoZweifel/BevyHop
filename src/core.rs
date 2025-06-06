@@ -6,8 +6,9 @@ use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::EffectAsset;
 use bevy_skein::SkeinPlugin;
 
-use crate::state::*;
+pub use crate::state::*;
 
+pub const LEVEL_COUNT: usize = 3;
 pub const SPAWN_POINT: Vec3 = Vec3::new(0.0, 8., 0.0);
 
 #[derive(Event)]
@@ -106,11 +107,21 @@ pub struct Lifetime {
 
 #[derive(Resource)]
 pub struct ParticleEffects {
-    pub boost_effect: Handle<EffectAsset>,
-    pub boost_idle_effect: Handle<EffectAsset>,
-    pub player_boost_effect: Handle<EffectAsset>,
-    pub new_level_effect: Handle<EffectAsset>,
-    pub checkpoint_effect: Handle<EffectAsset>,
+    pub boost_fx: Handle<EffectAsset>,
+    pub boost_idle_fx: Handle<EffectAsset>,
+    pub player_boost_fx: Handle<EffectAsset>,
+    pub new_level_fx: [Handle<EffectAsset>; LEVEL_COUNT],
+    pub checkpoint_fx: [Handle<EffectAsset>; LEVEL_COUNT],
+}
+
+impl ParticleEffects {
+    pub fn get_new_level_fx(&self, lvl: NonZeroUsize) -> Handle<EffectAsset> {
+        self.new_level_fx[lvl.get() - 1].clone()
+    }
+
+    pub fn get_checkpoint_fx(&self, lvl: NonZeroUsize) -> Handle<EffectAsset> {
+        self.checkpoint_fx[lvl.get() - 1].clone()
+    }
 }
 
 pub struct CorePlugin;

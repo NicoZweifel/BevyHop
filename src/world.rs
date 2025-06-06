@@ -6,18 +6,13 @@ use bevy_hanabi::ParticleEffect;
 use bevy_water::*;
 use std::{f32::consts::TAU, num::NonZeroUsize};
 
-use crate::color::Resurrect64;
-use crate::core::*;
-use crate::duration::*;
-use crate::state::*;
+use crate::prelude::*;
 
 pub struct WorldPlugin;
 
 #[derive(Component, Reflect, Debug)]
 #[reflect(Component)]
 pub struct Sun;
-
-pub const LEVEL_COUNT: usize = 3;
 
 const WATER_HEIGHT: f32 = 10.0;
 
@@ -196,7 +191,7 @@ fn spawn_world(
     water_settings.deep_color = match current_level.get().get() {
         1 => Resurrect64::DEEP_PURPLE,
         2 => Resurrect64::DARK_CYAN,
-        3 => Resurrect64::DARK_SCARLET,
+        3 => Resurrect64::DARK_RED_1,
         _ => Resurrect64::DARK_CYAN,
     };
 }
@@ -246,7 +241,7 @@ fn boost_colliders(
                 ColliderConstructor::ConvexHullFromMesh,
                 CollisionEventsEnabled,
                 children![
-                    ParticleEffect::new(effects.boost_idle_effect.clone()),
+                    ParticleEffect::new(effects.boost_idle_fx.clone()),
                     PointLight {
                         color: Resurrect64::GREEN,
                         radius: 3.0,
@@ -300,13 +295,14 @@ fn checkpoint_colliders(
                 |trigger: Trigger<OnCollisionStart>,
                  mut cmd: Commands,
                  mut history: ResMut<History>,
+                 current_lvl: Res<CurrentLevel>,
                  fx: Res<ParticleEffects>| {
                     history.0.push(trigger.target());
 
                     let other_entity = trigger.collider;
 
                     cmd.entity(other_entity).with_child((
-                        ParticleEffect::new(fx.checkpoint_effect.clone()),
+                        ParticleEffect::new(fx.get_checkpoint_fx(current_lvl.get())),
                         Visibility::Visible,
                         Lifetime {
                             timer: Timer::from_seconds(2., TimerMode::Once),
@@ -337,25 +333,28 @@ fn end_colliders(
             .observe(
                 |trigger: Trigger<OnCollisionStart>,
                  mut cmd: Commands,
-                 current_level: Res<CurrentLevel>,
+                 current_lvl: Res<CurrentLevel>,
                  mut ns: ResMut<NextState<AppState>>,
                  mut ew: EventWriter<SpawnLevel>,
                  fx: Res<ParticleEffects>| {
                     let other_entity = trigger.collider;
 
+                    let next_level = current_lvl.get().get() + 1;
+
+                    if next_level > LEVEL_COUNT {
+                        ns.set(AppState::GameOver);
+                        return;
+                    }
+
                     cmd.entity(other_entity).with_child((
-                        ParticleEffect::new(fx.new_level_effect.clone()),
+                        ParticleEffect::new(
+                            fx.get_new_level_fx(NonZeroUsize::new(next_level).unwrap()),
+                        ),
                         Visibility::Visible,
                         Lifetime {
                             timer: Timer::from_seconds(2., TimerMode::Once),
                         },
                     ));
-
-                    let next_level = current_level.get().get() + 1;
-                    if next_level > LEVEL_COUNT {
-                        ns.set(AppState::GameOver);
-                        return;
-                    }
 
                     ew.write(SpawnLevel(NonZeroUsize::new(next_level).unwrap()));
                 },
@@ -372,8 +371,7 @@ fn spawn_level(
     mut current_level: ResMut<CurrentLevel>,
     mut main_scene: ResMut<MainScene>,
     mut er: EventReader<SpawnLevel>,
-    mut q_player: Query<(Entity, &mut Transform), With<LogicalPlayer>>,
-    fx: Res<ParticleEffects>,
+    mut q_player: Query<&mut Transform, With<LogicalPlayer>>,
 ) {
     let spawn_point = SPAWN_POINT;
 
@@ -389,16 +387,8 @@ fn spawn_level(
 
         cmd.entity(scene).despawn();
 
-        for (player, mut transform) in &mut q_player {
+        for mut transform in &mut q_player {
             transform.translation = spawn_point;
-
-            cmd.entity(player).with_child((
-                ParticleEffect::new(fx.new_level_effect.clone()),
-                Visibility::Visible,
-                Lifetime {
-                    timer: Timer::from_seconds(2., TimerMode::Once),
-                },
-            ));
         }
     }
 }
@@ -427,7 +417,7 @@ fn boost_collision(
     };
 
     cmd.entity(other_entity).with_child((
-        ParticleEffect::new(fx.player_boost_effect.clone()),
+        ParticleEffect::new(fx.player_boost_fx.clone()),
         Visibility::Visible,
         Lifetime {
             timer: Timer::from_seconds(2., TimerMode::Once),
@@ -436,7 +426,7 @@ fn boost_collision(
 
     cmd.spawn((
         Visibility::Visible,
-        ParticleEffect::new(fx.boost_effect.clone()),
+        ParticleEffect::new(fx.boost_fx.clone()),
         Transform::from_translation(gtf.translation()),
         Lifetime {
             timer: Timer::from_seconds(2., TimerMode::Once),

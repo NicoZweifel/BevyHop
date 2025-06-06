@@ -2,9 +2,10 @@ use std::num::NonZeroUsize;
 
 use bevy::prelude::*;
 use bevy_console::*;
+use bevy_fps_controller::controller::{FpsController, FpsControllerInput, MoveMode};
 use clap::Parser;
 
-use crate::{core::*, state::*, world::LEVEL_COUNT};
+use crate::prelude::*;
 
 pub struct ConsolePlugin;
 
@@ -14,7 +15,8 @@ impl Plugin for ConsolePlugin {
             .add_console_command::<ExampleCommand, _>(example_command)
             .add_console_command::<LevelCommand, _>(level)
             .add_console_command::<DebugCommand, _>(debug)
-            .add_console_command::<PauseCommand, _>(pause);
+            .add_console_command::<PauseCommand, _>(pause)
+            .add_console_command::<NoClipCommand, _>(noclip);
     }
 }
 
@@ -56,6 +58,23 @@ fn level(mut log: ConsoleCommand<LevelCommand>, mut ew: EventWriter<SpawnLevel>)
         };
 
         ew.write(SpawnLevel(level));
+    }
+}
+
+#[derive(Parser, ConsoleCommand)]
+#[command(name = "noclip")]
+struct NoClipCommand {}
+
+fn noclip(mut log: ConsoleCommand<NoClipCommand>, mut q_controller: Query<&mut FpsController>) {
+    let Some(Ok(NoClipCommand {})) = log.take() else {
+        return;
+    };
+
+    for mut controller in &mut q_controller {
+        controller.move_mode = match controller.move_mode {
+            MoveMode::Noclip => MoveMode::Ground,
+            MoveMode::Ground => MoveMode::Noclip,
+        }
     }
 }
 
