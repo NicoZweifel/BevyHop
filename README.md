@@ -18,7 +18,7 @@ Air Strafing works by changing direction mid air by only using the mouse and str
 - Pause - ESC
 
 
-### Known Issues (might be fixed last minute)
+### Known Issues
 
 - Getting stuck during respawn (scheduling most likely).
 - Edge detection/Crouch issue. (https://github.com/qhdwight/bevy_fps_controller/pull/46)
