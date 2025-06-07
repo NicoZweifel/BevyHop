@@ -25,7 +25,7 @@ Air Strafing works by changing direction mid air, using synced mouse and strafe 
 - Janky Surf/Speed Boost.
 - HUD Design (TBD).
 - Edge falloff detection/Crouch issue. (https://github.com/qhdwight/bevy_fps_controller/pull/46)
-- MouseWheel jump scroll event not kept around long enough to trigger proper jump sometimes.
+- MouseWheel jump scroll event not kept around long enough to trigger proper jump sometimes (might fix this one soon for hardcore bhoppers that need/want it).
 
 
 
