@@ -19,6 +19,7 @@ Air Strafing works by changing direction mid air, using synced mouse and strafe 
 - Reset Level - `SHIFT`+`R`
 - Pause - `ESC`
 
+For the best experience running natively is recommended.
 
 ### Known Issues
 
@@ -27,6 +28,7 @@ Air Strafing works by changing direction mid air, using synced mouse and strafe 
 - HUD Design (TBD).
 - Edge falloff detection/Crouch issue. (https://github.com/qhdwight/bevy_fps_controller/pull/46)
 - MouseWheel jump scroll event not kept around long enough to trigger proper jump sometimes (might fix this one soon for hardcore bhoppers that need/want it).
+- shadows cutting off after a certain distance.
 
 ### Early Release Notes
 
@@ -37,6 +39,7 @@ Some things aren't final i.e.
  - Some Materials exports are messed up and need to be fixed in blender, especially end of lvl 3.
  - HUD/UI
  - maybe jump/walk sounds depending on how it turns out.
+ - loading screen / use loading state
 
 
 ### Things that were cut due to time constraints but might be added in the future
