@@ -141,13 +141,22 @@ impl Plugin for CorePlugin {
             .register_type::<SpeedBoost>()
             .register_type::<Ground>()
             .add_plugins((
-                DefaultPlugins.set(AssetPlugin {
-                    // Wasm builds will check for meta files (that don't exist) if this isn't set.
-                    // This causes errors and even panics in web builds on itch.
-                    // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
-                    meta_check: AssetMetaCheck::Never,
-                    ..default()
-                }),
+                DefaultPlugins
+                    .set(AssetPlugin {
+                        // Wasm builds will check for meta files (that don't exist) if this isn't set.
+                        // This causes errors and even panics in web builds on itch.
+                        // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
+                        meta_check: AssetMetaCheck::Never,
+                        ..default()
+                    })
+                    .set(WindowPlugin {
+                        primary_window: Window {
+                            fit_canvas_to_parent: true,
+                            ..default()
+                        }
+                        .into(),
+                        ..default()
+                    }),
                 SkeinPlugin::default(),
                 PhysicsPlugins::default(),
                 PhysicsDebugPlugin::default(),
