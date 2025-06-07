@@ -22,6 +22,7 @@ Air Strafing works by changing direction mid air, using synced mouse and strafe 
 
 ### Known Issues
 
+- Mouse capture on itch.io bugging out
 - Janky Surf/Speed Boost.
 - HUD Design (TBD).
 - Edge falloff detection/Crouch issue. (https://github.com/qhdwight/bevy_fps_controller/pull/46)
