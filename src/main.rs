@@ -26,6 +26,7 @@ fn main() {
             InputPlugin,
             UiPlugin,
             ConsolePlugin,
+            AudioPlugin,
         ))
         .run();
 }

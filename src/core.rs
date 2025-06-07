@@ -171,12 +171,9 @@ impl<S: Component> Default for UnitPlugin<S> {
 
 impl<S: Component> Plugin for UnitPlugin<S> {
     fn build(&self, app: &mut App) {
-        app.add_event::<Respawn<S>>().add_systems(
-            FixedUpdate,
-            (out_of_bounds::<S>, respawn::<S>)
-                .chain()
-                .in_set(GameplaySet),
-        );
+        app.add_event::<Respawn<S>>()
+            .add_systems(FixedUpdate, out_of_bounds::<S>.in_set(GameplaySet))
+            .add_systems(PreUpdate, respawn::<S>.in_set(GameplaySet));
     }
 }
 
@@ -212,7 +209,7 @@ pub fn respawn<S: Component>(
     }
 }
 
-fn out_of_bounds<S: Component>(
+pub fn out_of_bounds<S: Component>(
     q: Query<&Transform, With<S>>,
     history: Res<History>,
     q_gtf: Query<&GlobalTransform, With<CheckPoint>>,
@@ -221,7 +218,7 @@ fn out_of_bounds<S: Component>(
     let spawn_point = history.last(q_gtf);
 
     for transform in &q {
-        if (spawn_point.y - transform.translation.y).abs() < 100. {
+        if !is_out_of_bounds(transform.translation, spawn_point) {
             continue;
         }
 
@@ -230,4 +227,8 @@ fn out_of_bounds<S: Component>(
             ..default()
         });
     }
+}
+
+pub fn is_out_of_bounds(translation: Vec3, spawn_point: Vec3) -> bool {
+    (spawn_point.y - translation.y).abs() >= 95.
 }
