@@ -10,12 +10,12 @@ Air Strafing works by changing direction mid air by only using the mouse and str
 
 ### Controls
 
-Move - WASD
-Jump - SPACE/MWheel Down (Can also hold space to keep jumping)
-Toggle Auto-Bhop - SHIFT+SPACE
-Reset to Checkpoint - R
-Reset Level - SHIFT+R
-Pause - ESC
+- Move - WASD
+- Jump - SPACE/MWheel Down (Can also hold space to keep jumping)
+- Toggle Auto-Bhop - SHIFT+SPACE
+- Reset to Checkpoint - R
+- Reset Level - SHIFT+R
+- Pause - ESC
 
 
 ### Known Issues (might be fixed last minute)
