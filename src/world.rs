@@ -95,7 +95,7 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
             .try_into()
             .unwrap(),
         skyboxes: (1..=LEVEL_COUNT)
-            .map(|x| assets.load(format!("skybox_{:?}_skybox.ktx2", x)) as Handle<Image>)
+            .map(|x| assets.load(format!("skybox/skybox_{:?}_skybox.ktx2", x)) as Handle<Image>)
             .collect::<Vec<Handle<Image>>>()
             .try_into()
             .unwrap(),
