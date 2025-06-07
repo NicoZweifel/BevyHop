@@ -2,7 +2,7 @@ use std::num::NonZeroUsize;
 
 use bevy::prelude::*;
 use bevy_console::*;
-use bevy_fps_controller::controller::{FpsController, FpsControllerInput, MoveMode};
+use bevy_fps_controller::controller::*;
 use clap::Parser;
 
 use crate::prelude::*;
