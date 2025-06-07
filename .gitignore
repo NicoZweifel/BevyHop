@@ -4,7 +4,9 @@
 .cargo/config.toml
 
 /wasm/assets
-/wasm/bevy_hop.js
-/wasm/bevy_hop.wasm
+/wasm/*.js
+/wasm/*.wasm
+
+!/wasm/restart-audio-context.js
 
 
