@@ -4,4 +4,7 @@
 .cargo/config.toml
 
 /wasm/assets
+/wasm/bevy_hop.js
+/wasm/bevy_hop.wasm
+
 
