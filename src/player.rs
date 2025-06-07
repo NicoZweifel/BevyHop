@@ -78,7 +78,7 @@ fn setup(mut cmd: Commands) {
                     fly_speed: 50.,
                     fast_fly_speed: 100.,
                     air_acceleration: 20.,
-                    max_air_speed: 100.,
+                    max_air_speed: 1000.,
                     air_speed_cap: 10.,
                     friction: 10.,
                     ..default()
