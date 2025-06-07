@@ -84,10 +84,7 @@ jobs:
     needs:
       - check-if-upload-to-itch-is-configured
       - release-wasm
-      - release-linux
-      - release-windows
-      - release-macOS-intel
-      - release-macOS-apple-silicon
+
     if: ${{ needs.check-if-upload-to-itch-is-configured.outputs.should-upload == 'yes' }}
 
     steps:
