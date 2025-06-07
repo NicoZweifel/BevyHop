@@ -5,19 +5,19 @@ A skill-based movement game, inspired by Counter Strike Bhop/Surf community serv
 
 ![bevy_hop_gif](bevy_hop_gif.gif)
 
-Uses [bevy_fps_controller](https://github.com/qhdwight/bevy_fps_controller) for Source Engine inspired movement with [Air Strafing/Bunny Hopping](https://adrianb.io/2015/02/14/bunnyhop.html).
+Uses [`bevy_fps_controller`](https://github.com/qhdwight/bevy_fps_controller) for Source Engine inspired movement with [`Air Strafing/Bunny Hopping`](https://adrianb.io/2015/02/14/bunnyhop.html).
 
-Air Strafing works by changing direction mid air, only using synced mouse and strafe keys .
+Air Strafing works by changing direction mid air, using synced mouse and strafe keys (`A`,`D`), while not using `W` and `S`.
 
 
 ### Controls
 
-- Move - WASD
-- Jump - SPACE/MWheel Down (Can also hold space to keep jumping)
-- Toggle Auto-Bhop - SHIFT+SPACE
-- Reset to Checkpoint - R
-- Reset Level - SHIFT+R
-- Pause - ESC
+- Move - `WASD`
+- Jump - `SPACE`/`MWheel Down` (Can also hold space to keep jumping)
+- Toggle Auto-Bhop - `SHIFT`+`SPACE`
+- Reset to Checkpoint - `R`
+- Reset Level - `SHIFT`+`R`
+- Pause - `ESC`
 
 
 ### Known Issues
