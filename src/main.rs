@@ -1,3 +1,4 @@
+mod audio;
 mod color;
 mod console;
 mod core;
