@@ -1,6 +1,6 @@
 use bevy::color::Color;
 
-/// The correct Resurrect 64 color palette, generated from the user-provided list.
+/// Resurrect 64 color palette, generated from https://lospec.com/palette-list/resurrect-64.
 pub struct Resurrect64;
 
 #[allow(dead_code)]
