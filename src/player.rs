@@ -34,10 +34,6 @@ fn setup(mut cmd: Commands) {
     let logical_entity = cmd
         .spawn((
             Collider::cylinder(1.0, height),
-            // A capsule can be used but is NOT recommended
-            // If you use it, you have to make sure each segment point is
-            // equidistant from the translation of the player transform
-            // Collider::capsule(0.5, height),
             (
                 Friction {
                     dynamic_coefficient: 0.0,
