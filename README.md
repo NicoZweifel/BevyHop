@@ -20,7 +20,8 @@ Air Strafing works by changing direction mid air by only using the mouse and str
 
 ### Known Issues
 
-- Getting stuck during respawn (scheduling most likely).
+- Janky Surf/Speed Boost.
+- Getting stuck during respawn (fixable with scheduling most likely).
 - Edge detection/Crouch issue. (https://github.com/qhdwight/bevy_fps_controller/pull/46)
 - MouseWheel jump scroll event not kept around long enough to trigger proper jump sometimes.
 
