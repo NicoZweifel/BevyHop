@@ -148,7 +148,7 @@ impl MainScene {
 pub struct CurrentLevel(pub NonZeroUsize);
 
 impl CurrentLevel {
-    fn get(&self) -> NonZeroUsize {
+    pub fn get(&self) -> NonZeroUsize {
         self.0
     }
 }

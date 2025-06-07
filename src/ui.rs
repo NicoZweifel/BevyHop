@@ -493,12 +493,13 @@ fn update_level_duration_ui(
     duration: ResMut<LevelDuration>,
     mut text_query: Query<&mut Text, With<LevelDurationText>>,
     time: Res<Time>,
+    current_lvl: Res<CurrentLevel>,
 ) {
     let stopwatch = duration.into_inner();
     stopwatch.0.tick(time.delta());
     let secs = stopwatch.0.elapsed_secs();
 
-    let new_text = format!("Level: {}", format_duration(secs));
+    let new_text = format!("Level {}: {}", current_lvl.get(), format_duration(secs));
 
     for mut text in &mut text_query {
         text.0 = new_text.clone();
