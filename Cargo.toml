@@ -21,7 +21,7 @@ tracing = { version = "0.1", features = [
     "release_max_level_warn",
 ] }
 bevy_console = "0.14.0"
-bevy_water = "0.16.0"
+bevy_water = {version = "0.16.0", default-features = false, features = ["webgpu","eembed_shaders","depth_prepass"]}
 bevy-inspector-egui = "0.31.0"
 bevy_egui = "0.34.1"
 
