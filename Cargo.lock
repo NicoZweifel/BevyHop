@@ -957,6 +957,7 @@ dependencies = [
 [[package]]
 name = "bevy_fps_controller"
 version = "0.16.0"
+source = "git+https://github.com/NicoZweifel/bevy_fps_controller.git?branch=avian%2Fbevy_0.16#60ba06ca8a7bd03da19b3b2e1c2d04406fc7c258"
 dependencies = [
  "avian3d",
  "bevy",

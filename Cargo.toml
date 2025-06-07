@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 bevy = {version = "0.16.0",features = ["exr"]}
 bevy_skein = "0.2.0"
-bevy_fps_controller = { path = "../nz_bevy_fps_controller",features=['avian'] }
+bevy_fps_controller = { git = "https://github.com/NicoZweifel/bevy_fps_controller.git",features=['avian'], branch ="avian/bevy_0.16" }
 avian3d = "0.3.0"
 avian_pickup = "0.2.0"
 bevy_hanabi = "0.16.0"
