@@ -44,8 +44,6 @@ The console has a bunch of commands:
 ### Early Release Notes
 
 Some things aren't final i.e.
- - Level 3 Ending is a bit difficult.
- - Some Materials exports are messed up and need to be fixed in blender, especially end of lvl 3.
  - HUD/UI
  - maybe jump/walk sounds depending on how it turns out.
  - the `Run` time is basically the sum of the best segments. Failed attempts don't count. Could be improved/differentiated in the future.
@@ -61,9 +59,17 @@ Some things aren't final i.e.
 
 ### Credits
 
-- Color palette: [https://lospec.com/palette-list/resurr](Ressurect 64 by Kerrie Lake)
-- HRDI Turnberg Sky 3 - [https://hdrmaps.com/turnberg-sky-3/](HDRMAPS.com Royalty-Free)
-- HDRI Turnberg Sky 4 -  [https://hdrmaps.com/turnberg-sky-4/](HDRMAPS.com Royalty-Free)
-- HDRI Turnberg Sky 5 - [https://hdrmaps.com/turnberg-sky-5/](HDRMAPS.com Royalty-Free )
-- Ocean sound - [https://pixabay.com/sound-effects/gentle-ocean-waves-fizzing-bubbles-64980/](Gentle ocean waves fizzing bubbles by jackmichaelking (Freesound)) Pixabay Content License
-- Dive sound - [https://uppbeat.io/sfx/underwater-dive-impact/8179/24475](Underwater dive impact by Epic Stock Media)
+- Color palette: [Ressurect 64 by Kerrie Lake][1]
+- HRDI Turnberg Sky 3 - [HDRMAPS.com Royalty-Free][2]
+- HDRI Turnberg Sky 4 - [HDRMAPS.com Royalty-Free][3]
+- HDRI Turnberg Sky 5 - [HDRMAPS.com Royalty-Free][4]
+- Ocean sound - [Gentle ocean waves fizzing bubbles by jackmichaelking (Freesound) Pixabay Content License][5]
+- Dive sound - [Underwater dive impact by Epic Stock Media][6]
+
+
+[1]: https://lospec.com/palette-list/resurrect-64
+[2]:https://hdrmaps.com/turnberg-sky-3/
+[3]:https://hdrmaps.com/turnberg-sky-4/
+[4]:https://hdrmaps.com/turnberg-sky-5/
+[5]:https://pixabay.com/sound-effects/gentle-ocean-waves-fizzing-bubbles-64980/
+[6]:https://uppbeat.io/sfx/underwater-dive-impact/8179/24475
