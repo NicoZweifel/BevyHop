@@ -249,10 +249,7 @@ pub fn out_of_bounds<S: Component>(
             continue;
         }
 
-        er.write(Respawn::<S> {
-            translation: spawn_point,
-            ..default()
-        });
+        er.write(Respawn::<S>::new(spawn_point));
     }
 }
 
