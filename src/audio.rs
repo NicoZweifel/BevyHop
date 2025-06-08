@@ -61,7 +61,7 @@ fn dive_sound(
                 AudioPlayer::new(sounds.dive_sound.clone()),
                 PlaybackSettings {
                     mode: PlaybackMode::Despawn,
-                    volume: Volume::Linear(0.25),
+                    volume: Volume::Linear(0.15),
                     ..default()
                 },
             ));
