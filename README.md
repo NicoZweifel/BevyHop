@@ -5,8 +5,7 @@ A skill-based movement game, inspired by Counter Strike Bhop/Surf community serv
 
 ![bevy_hop_gif](bevy_hop_gif.gif)
 
-Uses [`bevy_fps_controller`](https://github.com/qhdwight/bevy_fps_controller) for Source Engine inspired movement with [`Air Strafing/Bunny Hopping`](https://adrianb.io/2015/02/14/bunnyhop.html).
-
+Uses [`bevy_fps_controller`][9] for Source Engine inspired movement with [`Air Strafing/Bunny Hopping`][8]
 Air Strafing works by changing direction mid air, using synced mouse and strafe keys (`A`,`D`), while not using `W` and `S`.
 
 
@@ -37,7 +36,7 @@ The console has a bunch of commands:
 - Mouse capture on itch.io bugging out
 - Janky Surf/Speed Boost.
 - HUD Design (TBD).
-- [https://github.com/qhdwight/bevy_fps_controller/pull/46](Edge falloff detection/Crouch issue).
+- [Edge falloff detection/Crouch issue][7].
 - MouseWheel jump scroll event not kept around long enough to trigger proper jump sometimes (might fix this one soon for hardcore bhoppers that need/want it).
 - shadows cutting off after a certain distance.
 
@@ -53,7 +52,7 @@ Some things aren't final i.e.
 
 - Multiplayer
 - Multiple types of boosts
-- dynamic and more particle/audio fx
+- dynamic and more particle/sound fx
 - Highscores
 
 
@@ -73,3 +72,7 @@ Some things aren't final i.e.
 [4]:https://hdrmaps.com/turnberg-sky-5/
 [5]:https://pixabay.com/sound-effects/gentle-ocean-waves-fizzing-bubbles-64980/
 [6]:https://uppbeat.io/sfx/underwater-dive-impact/8179/24475
+[7]:https://github.com/qhdwight/bevy_fps_controller/pull/46#issuecomment-2889270436
+[8]:https://adrianb.io/2015/02/14/bunnyhop.html
+[9]:https://github.com/qhdwight/bevy_fps_controller
+
