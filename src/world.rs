@@ -75,7 +75,13 @@ impl Plugin for WorldPlugin {
     }
 }
 
-fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<AssetServer>) {
+fn setup(
+    mut commands: Commands,
+    mut window: Query<&mut Window>,
+    assets: Res<AssetServer>,
+
+    mut loading: ResMut<AssetsLoading>,
+) {
     let mut window = window.single_mut().unwrap();
     window.title = String::from("Bevy Hop");
 
@@ -88,17 +94,31 @@ fn setup(mut commands: Commands, mut window: Query<&mut Window>, assets: Res<Ass
         Transform::from_xyz(4.0, 7.0, -4.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
+    let levels: [Handle<Gltf>; LEVEL_COUNT] = (1..=LEVEL_COUNT)
+        .map(|x| assets.load(format!("level{:?}.glb", x)) as Handle<Gltf>)
+        .collect::<Vec<Handle<Gltf>>>()
+        .try_into()
+        .unwrap();
+
+    let skyboxes: [Handle<Image>; LEVEL_COUNT] = (1..=LEVEL_COUNT)
+        .map(|x| assets.load(format!("skybox/skybox_{:?}_skybox.ktx2", x)) as Handle<Image>)
+        .collect::<Vec<Handle<Image>>>()
+        .try_into()
+        .unwrap();
+
+    levels
+        .iter()
+        .map(|x| x.clone().into())
+        .for_each(|x| loading.0.push(x));
+
+    skyboxes
+        .iter()
+        .map(|x| x.clone().into())
+        .for_each(|x| loading.0.push(x));
+
     commands.insert_resource(MainScene {
-        levels: (1..=LEVEL_COUNT)
-            .map(|x| assets.load(format!("level{:?}.glb", x)) as Handle<Gltf>)
-            .collect::<Vec<Handle<Gltf>>>()
-            .try_into()
-            .unwrap(),
-        skyboxes: (1..=LEVEL_COUNT)
-            .map(|x| assets.load(format!("skybox/skybox_{:?}_skybox.ktx2", x)) as Handle<Image>)
-            .collect::<Vec<Handle<Image>>>()
-            .try_into()
-            .unwrap(),
+        levels,
+        skyboxes,
         is_spawned: false,
     });
 

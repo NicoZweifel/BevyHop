@@ -87,8 +87,14 @@ impl TextResource {
     }
 }
 
-fn setup_font(mut cmd: Commands, asset_server: Res<AssetServer>) {
-    cmd.insert_resource(TextResource(asset_server.load("fira_mono.ttf")));
+fn setup_font(
+    mut cmd: Commands,
+    asset_server: Res<AssetServer>,
+    mut loading: ResMut<AssetsLoading>,
+) {
+    let handle = asset_server.load("fira_mono.ttf");
+    cmd.insert_resource(TextResource(handle.clone()));
+    loading.0.push(handle.into());
 }
 
 #[derive(Component)]
