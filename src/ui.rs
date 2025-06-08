@@ -106,14 +106,14 @@ struct LevelDurationText;
 #[derive(Component)]
 struct RunDurationText;
 
-struct UINode {
+struct NodeBuilder {
     direction: FlexDirection,
     align_items: AlignItems,
     justify_content: JustifyContent,
     grow: bool,
 }
 
-impl Default for UINode {
+impl Default for NodeBuilder {
     fn default() -> Self {
         Self {
             direction: FlexDirection::Column,
@@ -124,7 +124,7 @@ impl Default for UINode {
     }
 }
 
-impl UINode {
+impl NodeBuilder {
     fn new() -> Self {
         Self::default()
     }
@@ -176,7 +176,7 @@ impl UINode {
 
 fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
     cmd.spawn((
-        UINode::new()
+        NodeBuilder::new()
             .with_grow(true)
             .with_align_items(AlignItems::Start)
             .with_justify_content(JustifyContent::SpaceBetween)
@@ -184,7 +184,7 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
         Hud,
         children![
             (
-                UINode::new()
+                NodeBuilder::new()
                     .with_grow(true)
                     .with_direction(FlexDirection::Row)
                     .with_align_items(AlignItems::Start)
@@ -204,7 +204,7 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
                 ]
             ),
             (
-                UINode::new()
+                NodeBuilder::new()
                     .with_grow(true)
                     .with_direction(FlexDirection::Row)
                     .with_align_items(AlignItems::End)
@@ -218,7 +218,7 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
                     ),
                     (
                         AutoJumpUi,
-                        UINode::new()
+                        NodeBuilder::new()
                             .with_justify_content(JustifyContent::End)
                             .get(),
                         BorderRadius::all(Val::Px(10.)),
@@ -248,7 +248,7 @@ fn setup_pause_menu(
     text_resource: Res<TextResource>,
 ) {
     cmd.spawn((
-        UINode::new().with_grow(true).get(),
+        NodeBuilder::new().with_grow(true).get(),
         PauseMenu,
         BackgroundColor(BACKGROUND.with_alpha(match debug_state.get() {
             DebugState::Disabled => 0.5,
@@ -257,13 +257,13 @@ fn setup_pause_menu(
     ))
     .with_children(|cmd| {
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(Text::new("Resume"), text_resource.get_button_text_props(),)],
         ))
         .observe(handle_resume);
 
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(
                 Text::new("Main Menu"),
                 text_resource.get_button_text_props()
@@ -279,7 +279,7 @@ fn setup_pause_menu(
         );
 
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props())],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
@@ -311,13 +311,13 @@ struct LoadingScreen;
 
 fn setup_loading_screen(mut cmd: Commands, text_resource: Res<TextResource>) {
     cmd.spawn((
-        UINode::new().with_grow(true).get(),
+        NodeBuilder::new().with_grow(true).get(),
         PauseMenu,
         BackgroundColor(BACKGROUND),
     ))
     .with_children(|cmd| {
         cmd.spawn((
-            UINode::new().get(),
+            NodeBuilder::new().get(),
             BorderRadius::all(Val::Px(10.)),
             children![(
                 Text::new("Loading..."),
@@ -336,18 +336,18 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
     ));
     cmd.spawn((
-        UINode::new().with_grow(true).get(),
+        NodeBuilder::new().with_grow(true).get(),
         GameOverMenu,
         BackgroundColor(BACKGROUND),
     ))
     .with_children(|cmd| {
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(Text::new("Restart"), text_resource.get_button_text_props())],
         ))
         .observe(handle_restart);
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(
                 Text::new("Main Menu"),
                 text_resource.get_button_text_props()
@@ -360,7 +360,7 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         );
 
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props())],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
@@ -398,18 +398,18 @@ fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
     ));
     cmd.spawn((
         BackgroundColor(BACKGROUND),
-        UINode::new().with_grow(true).get(),
+        NodeBuilder::new().with_grow(true).get(),
         MainMenu,
     ))
     .with_children(|cmd| {
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(Text::new("Play"), text_resource.get_button_text_props())],
         ))
         .observe(handle_play);
 
         cmd.spawn((
-            UINode::new().get_button(),
+            NodeBuilder::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props(),)],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
