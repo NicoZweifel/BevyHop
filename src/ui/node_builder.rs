@@ -40,17 +40,15 @@ impl From<&NodeBuilder> for Node {
             flex_direction: value.direction,
             align_items: value.align_items,
             justify_content: value.justify_content,
-            padding: value.margin,
-            margin: value.padding,
-            row_gap: MARGIN / 2.,
-            column_gap: MARGIN / 2.,
+            padding: value.padding,
+            margin: value.margin,
+            row_gap: MARGIN,
+            column_gap: MARGIN,
             border: value.border,
             ..default()
         }
     }
 }
-
-pub type CardProps = (BorderRadius, BackgroundColor, BorderColor);
 
 impl NodeBuilder {
     pub fn new() -> Self {
@@ -96,27 +94,52 @@ impl NodeBuilder {
         self
     }
 
-    pub fn get_button(&mut self) -> (Button, Node, BorderRadius) {
+    pub fn get_button(&mut self) -> impl Bundle {
+        let padding = self.padding;
+        let margin = self.margin;
         (
             Button,
-            self.with_padding(UiRect::all(PADDING))
-                .with_margin(UiRect::all(MARGIN))
-                .get(),
+            self.with_padding(if padding == UiRect::ZERO {
+                UiRect::all(PADDING)
+            } else {
+                padding
+            })
+            .with_margin(if margin == UiRect::ZERO {
+                UiRect::all(MARGIN)
+            } else {
+                margin
+            })
+            .get(),
             BorderRadius::all(BORDER_RADIUS),
         )
     }
 
-    pub fn get_card(&mut self) -> (Node, CardProps) {
+    pub fn get_card(&mut self) -> impl Bundle + use<> {
+        let padding = self.padding;
+        let margin = self.margin;
+        let border = self.border;
         (
-            self.with_padding(UiRect::all(PADDING))
-                .with_margin(UiRect::all(MARGIN))
-                .with_border(UiRect::all(BORDER))
-                .get(),
+            self.with_padding(if padding == UiRect::ZERO {
+                UiRect::all(PADDING)
+            } else {
+                padding
+            })
+            .with_margin(if margin == UiRect::ZERO {
+                UiRect::all(MARGIN)
+            } else {
+                margin
+            })
+            .with_border(if border == UiRect::ZERO {
+                UiRect::all(BORDER)
+            } else {
+                border
+            })
+            .get(),
             NodeBuilder::get_card_props(),
         )
     }
 
-    pub fn get_card_props() -> CardProps {
+    pub fn get_card_props() -> impl Bundle {
         (
             BorderRadius::all(BORDER_RADIUS),
             BackgroundColor(NORMAL_BUTTON.with_alpha(0.5)),

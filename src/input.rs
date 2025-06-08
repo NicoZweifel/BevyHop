@@ -26,6 +26,11 @@ impl Plugin for InputPlugin {
             )
             .add_systems(OnEnter(AppState::GameOver), enable_cursor)
             .add_systems(OnEnter(PausedState::Paused), enable_cursor)
+            .add_systems(OnEnter(AppState::InGame), disable_cursor)
+            .add_systems(
+                OnEnter(PausedState::Running),
+                disable_cursor.run_if(in_state(AppState::InGame)),
+            )
             .add_systems(
                 PreUpdate,
                 auto_jump
@@ -44,22 +49,29 @@ impl Plugin for InputPlugin {
 fn manage_cursor(
     btn: Res<ButtonInput<MouseButton>>,
     key: Res<ButtonInput<KeyCode>>,
-    mut window_query: Query<&mut Window>,
-    mut controller_query: Query<&mut FpsController>,
+    window_query: Query<&mut Window>,
+    controller_query: Query<&mut FpsController>,
     mut ns: ResMut<NextState<PausedState>>,
 ) {
     if btn.just_pressed(MouseButton::Left) {
-        for mut window in &mut window_query {
-            window.cursor_options.grab_mode = CursorGrabMode::Locked;
-            window.cursor_options.visible = false;
-            for mut controller in &mut controller_query {
-                controller.enable_input = true;
-            }
-        }
+        disable_cursor(window_query, controller_query);
     }
 
     if key.just_pressed(KeyCode::Escape) {
         ns.set(PausedState::Paused);
+    }
+}
+
+fn disable_cursor(
+    mut window_query: Query<&mut Window>,
+    mut controller_query: Query<&mut FpsController>,
+) {
+    for mut window in &mut window_query {
+        window.cursor_options.grab_mode = CursorGrabMode::Locked;
+        window.cursor_options.visible = false;
+        for mut controller in &mut controller_query {
+            controller.enable_input = true;
+        }
     }
 }
 

@@ -44,7 +44,6 @@ The console has a bunch of commands:
 ### Early Release Notes
 
 Some things aren't final i.e.
- - HUD/UI
  - maybe jump/walk sounds depending on how it turns out.
  - the `Run` time is basically the sum of the best segments. Failed attempts don't count. Could be improved/differentiated in the future.
 
@@ -66,6 +65,8 @@ Some things aren't final i.e.
 - HDRI Turnberg Sky 5 - [HDRMAPS.com Royalty-Free][4]
 - Ocean sound - [Gentle ocean waves fizzing bubbles by jackmichaelking (Freesound) Pixabay Content License][5]
 - Dive sound - [Underwater dive impact by Epic Stock Media][6]
+- Default Font - [Fira Mono by Carrois Apostrophe, The Mozilla Corporation and Telefonica S.A.  SIL Open Font License, Version 1.1][11]
+- Header Font - [Jua by Woowahan Brothers, The Jua Project Authors -SIL Open Font License, Version 1.1]
 
 
 [1]: https://lospec.com/palette-list/resurrect-64
@@ -78,4 +79,5 @@ Some things aren't final i.e.
 [8]:https://adrianb.io/2015/02/14/bunnyhop.html
 [9]:https://github.com/qhdwight/bevy_fps_controller
 [10]:https://github.com/NicoZweifel/BevyHop
-
+[11]:https://fonts.google.com/specimen/Fira+Mono
+[12]:https://fonts.google.com/specimen/Jua

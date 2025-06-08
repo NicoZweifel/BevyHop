@@ -4,6 +4,8 @@ use crate::color::Resurrect64;
 
 use super::*;
 
+pub use super::text_resource::*;
+
 pub(super) const PADDING: Val = Val::Px(12.);
 pub(super) const MARGIN: Val = Val::Px(12.);
 pub(super) const BORDER: Val = Val::Px(1.);
@@ -31,22 +33,17 @@ pub(super) struct LevelDurationText;
 #[derive(Component)]
 pub(super) struct RunDurationText;
 
-#[derive(Resource)]
-pub struct TextResource(pub Handle<Font>);
-
 pub(super) fn get_header(
     text_resource: &Res<TextResource>,
-) -> (
-    (Node, CardProps),
-    SpawnRelatedBundle<ChildOf, Spawn<(Text, (TextFont, TextColor))>>,
-) {
+) -> (impl Bundle, SpawnRelatedBundle<ChildOf, Spawn<impl Bundle>>) {
     (
         NodeBuilder::new()
-            .with_margin(UiRect::bottom(MARGIN * 4.))
+            .with_padding(UiRect::all(PADDING * 2.))
+            .with_margin(UiRect::all(MARGIN * 2.))
             .get_card(),
         children![(
             Text(String::from("BevyHop")),
-            text_resource.get_text_props(60.0, Resurrect64::LIGHT_PURPLE),
+            text_resource.get_header_text_props(),
         )],
     )
 }
@@ -56,9 +53,16 @@ pub(super) fn setup_font(
     asset_server: Res<AssetServer>,
     mut loading: ResMut<AssetsLoading>,
 ) {
-    let handle = asset_server.load("fira_mono.ttf");
-    cmd.insert_resource(TextResource(handle.clone()));
-    loading.0.push(handle.into());
+    let default_font = asset_server.load("fira_mono.ttf");
+    let header_font = asset_server.load("Jua-Regular.ttf");
+
+    loading.0.push(default_font.clone().into());
+    loading.0.push(header_font.clone().into());
+
+    cmd.insert_resource(TextResource {
+        default_font,
+        header_font,
+    });
 }
 
 pub(super) fn button_system(
@@ -80,4 +84,11 @@ pub(super) fn button_system(
             }
         }
     }
+}
+
+pub(super) fn format_duration(secs: f32) -> String {
+    let h = secs / 3600.;
+    let m = (secs % 3600.) / 60.;
+    let s = secs % 60.;
+    format!("{:02.0}:{:02.0}:{:02.0}", h, m, s)
 }

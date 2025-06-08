@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::relationship::RelatedSpawnerCommands, prelude::*};
 
 use crate::core::*;
 
@@ -21,6 +21,20 @@ fn setup_pause_menu(
     debug_state: Res<State<DebugState>>,
     text_resource: Res<TextResource>,
 ) {
+    pause_menu_layout(&mut cmd, &debug_state).with_children(|cmd| {
+        cmd.spawn(NodeBuilder::new().get_card())
+            .with_children(|cmd| {
+                pause_menu_header(cmd, &text_resource);
+                pause_menu_content(cmd, &text_resource);
+            });
+    });
+}
+
+fn pause_menu_layout<'a>(
+    cmd: &'a mut Commands,
+
+    debug_state: &Res<State<DebugState>>,
+) -> EntityCommands<'a> {
     cmd.spawn((
         NodeBuilder::new().with_grow(true).get(),
         PauseMenu,
@@ -29,58 +43,48 @@ fn setup_pause_menu(
             DebugState::Enabled => 0.,
         })),
     ))
-    .with_children(|cmd| {
-        cmd.spawn(NodeBuilder::new().get_card())
-            .with_children(|cmd| {
-                cmd.spawn(get_header(&text_resource));
+}
 
-                cmd.spawn((
-                    NodeBuilder::new().get_button(),
-                    children![(Text::new("Resume"), text_resource.get_button_text_props(),)],
-                ))
-                .observe(handle_resume);
+fn pause_menu_header(
+    cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
+    text_resource: &Res<TextResource>,
+) {
+    cmd.spawn(get_header(text_resource));
+}
 
-                cmd.spawn((
-                    NodeBuilder::new().get_button(),
-                    children![(
-                        Text::new("Main Menu"),
-                        text_resource.get_button_text_props()
-                    )],
-                ))
-                .observe(
-                    |_: Trigger<Pointer<Click>>, mut ns_app_state: ResMut<NextState<AppState>>| {
-                        ns_app_state.set(AppState::MainMenu);
-                    },
-                );
+fn pause_menu_content(
+    cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
+    text_resource: &Res<TextResource>,
+) {
+    cmd.spawn((
+        NodeBuilder::new().get_button(),
+        children![(Text::new("Resume"), text_resource.get_button_text_props(),)],
+    ))
+    .observe(handle_resume);
 
-                #[cfg(not(target_arch = "wasm32"))]
-                cmd.spawn((
-                    NodeBuilder::new().get_button(),
-                    children![(Text::new("Quit"), text_resource.get_button_text_props())],
-                ))
-                .observe(
-                    |_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-                        ew.write(AppExit::Success);
-                    },
-                );
-            });
+    cmd.spawn((
+        NodeBuilder::new().get_button(),
+        children![(
+            Text::new("Main Menu"),
+            text_resource.get_button_text_props()
+        )],
+    ))
+    .observe(
+        |_: Trigger<Pointer<Click>>, mut ns_app_state: ResMut<NextState<AppState>>| {
+            ns_app_state.set(AppState::MainMenu);
+        },
+    );
+
+    #[cfg(not(target_arch = "wasm32"))]
+    cmd.spawn((
+        NodeBuilder::new().get_button(),
+        children![(Text::new("Quit"), text_resource.get_button_text_props())],
+    ))
+    .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+        ew.write(AppExit::Success);
     });
 }
 
-fn handle_resume(
-    _: Trigger<Pointer<Click>>,
-    mut ns: ResMut<NextState<PausedState>>,
-
-    mut window_query: Query<&mut Window>,
-    mut controller_query: Query<&mut FpsController>,
-) {
+fn handle_resume(_: Trigger<Pointer<Click>>, mut ns: ResMut<NextState<PausedState>>) {
     ns.set(PausedState::Running);
-
-    for mut window in &mut window_query {
-        window.cursor_options.grab_mode = CursorGrabMode::Locked;
-        window.cursor_options.visible = false;
-        for mut controller in &mut controller_query {
-            controller.enable_input = true;
-        }
-    }
 }

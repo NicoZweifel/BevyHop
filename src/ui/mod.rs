@@ -9,7 +9,7 @@ mod text_resource;
 
 pub use core::*;
 
-use bevy::{prelude::*, window::CursorGrabMode};
+use bevy::prelude::*;
 use bevy_dev_tools::fps_overlay::*;
 use bevy_egui::EguiPlugin;
 use bevy_fps_controller::controller::*;

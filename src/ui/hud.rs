@@ -27,60 +27,68 @@ impl Plugin for HudPlugin {
 }
 
 fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
-    cmd.spawn((
+    cmd.spawn((hud_layout(), children![hud_content(&text_resource)]));
+}
+
+fn hud_layout() -> impl Bundle {
+    (
         NodeBuilder::new()
             .with_grow(true)
             .with_align_items(AlignItems::Start)
             .with_justify_content(JustifyContent::SpaceBetween)
-            .with_margin(UiRect::all(MARGIN))
             .get(),
         Hud,
-        children![
-            (
-                NodeBuilder::new()
-                    .with_direction(FlexDirection::Row)
-                    .with_grow(true)
-                    .with_align_items(AlignItems::Start)
-                    .with_justify_content(JustifyContent::SpaceBetween)
-                    .get(),
-                children![
-                    (
-                        NodeBuilder::new().get_card(),
-                        children![(
-                            Text(String::from("")),
-                            LevelDurationText,
-                            text_resource.get_hud_text_props(24.0),
-                        )]
-                    ),
-                    (
-                        NodeBuilder::new().get_card(),
-                        children![(
-                            Text(String::from("")),
-                            RunDurationText,
-                            text_resource.get_hud_text_props(24.),
-                        )]
-                    ),
-                ]
-            ),
-            (
-                NodeBuilder::new()
-                    .with_grow(true)
-                    .with_direction(FlexDirection::Row)
-                    .with_align_items(AlignItems::Center)
-                    .with_padding(UiRect::all(PADDING * 2.))
-                    .with_justify_content(JustifyContent::Center)
-                    .get(),
-                children![(
+    )
+}
+
+fn hud_content(text_resource: &Res<TextResource>) -> impl Bundle {
+    (
+        (
+            NodeBuilder::new()
+                .with_direction(FlexDirection::Row)
+                .with_grow(true)
+                .with_margin(UiRect::all(MARGIN))
+                .with_align_items(AlignItems::Start)
+                .with_justify_content(JustifyContent::SpaceAround)
+                .get(),
+            children![
+                (
                     NodeBuilder::new().get_card(),
                     children![(
                         Text(String::from("")),
-                        Speed,
-                        text_resource.get_hud_text_props(28.0)
+                        LevelDurationText,
+                        text_resource.get_hud_text_props(24.0),
                     )]
-                ),]
-            ),
-        ],
-    ));
+                ),
+                (
+                    NodeBuilder::new().get_card(),
+                    children![(
+                        Text(String::from("")),
+                        RunDurationText,
+                        text_resource.get_hud_text_props(24.),
+                    )]
+                ),
+            ],
+        ),
+        (
+            NodeBuilder::new()
+                .with_grow(true)
+                .with_direction(FlexDirection::Row)
+                .with_align_items(AlignItems::Center)
+                .with_margin(UiRect::all(MARGIN))
+                .with_padding(UiRect::all(PADDING * 2.))
+                .with_justify_content(JustifyContent::Center)
+                .get(),
+            children![(
+                NodeBuilder::new().get_card(),
+                children![(
+                    Text(String::from("")),
+                    Speed,
+                    text_resource.get_hud_text_props(28.0)
+                )]
+            ),],
+        ),
+    )
 }
 
 fn update_speed_ui(
@@ -129,11 +137,4 @@ fn update_run_duration_ui(
     for mut text in &mut text_query {
         text.0 = new_text.clone();
     }
-}
-
-fn format_duration(secs: f32) -> String {
-    let h = secs / 3600.;
-    let m = (secs % 3600.) / 60.;
-    let s = secs % 60.;
-    format!("{:02.0}:{:02.0}:{:02.0}", h, m, s)
 }
