@@ -7,6 +7,7 @@ use super::*;
 pub(super) const PADDING: Val = Val::Px(12.);
 pub(super) const MARGIN: Val = Val::Px(12.);
 pub(super) const BORDER: Val = Val::Px(1.);
+pub(super) const BORDER_RADIUS: Val = Val::Px(5.);
 
 pub(super) const NORMAL_BUTTON: Color = Resurrect64::DARK_PURPLE_1;
 pub(super) const HOVERED_BUTTON: Color = Resurrect64::DARK_PURPLE_2;
@@ -14,7 +15,7 @@ pub(super) const PRESSED_BUTTON: Color = Resurrect64::GRAY_PURPLE_1;
 
 pub(super) const BACKGROUND: Color = Resurrect64::DARK_SLATE_BLUE;
 
-pub(super) const HUD_TEXT_COLOR: Color = Resurrect64::DARK_PURPLE_1;
+pub(super) const HUD_TEXT_COLOR: Color = BUTTON_TEXT_COLOR;
 
 pub(super) const BUTTON_TEXT_COLOR: Color = Color::linear_rgb(0.9, 0.9, 0.9);
 

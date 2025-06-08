@@ -29,12 +29,15 @@ fn setup_loading_screen(mut cmd: Commands, text_resource: Res<TextResource>) {
         NodeBuilder::new().with_grow(true).get(),
         LoadingScreen,
         BackgroundColor(BACKGROUND),
-        children![(
-            NodeBuilder::new().get_card(),
-            children![(
-                Text::new("Loading..."),
-                text_resource.get_button_text_props()
-            )],
-        )],
+        children![
+            get_header(&text_resource),
+            (
+                NodeBuilder::new().get_card(),
+                children![(
+                    Text::new("Loading..."),
+                    text_resource.get_button_text_props()
+                )],
+            )
+        ],
     ));
 }

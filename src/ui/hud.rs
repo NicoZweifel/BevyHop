@@ -38,8 +38,8 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
         children![
             (
                 NodeBuilder::new()
-                    .with_grow(true)
                     .with_direction(FlexDirection::Row)
+                    .with_grow(true)
                     .with_align_items(AlignItems::Start)
                     .with_justify_content(JustifyContent::SpaceBetween)
                     .get(),
@@ -66,35 +66,18 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
                 NodeBuilder::new()
                     .with_grow(true)
                     .with_direction(FlexDirection::Row)
-                    .with_align_items(AlignItems::End)
-                    .with_justify_content(JustifyContent::SpaceBetween)
+                    .with_align_items(AlignItems::Center)
+                    .with_padding(UiRect::all(PADDING * 2.))
+                    .with_justify_content(JustifyContent::Center)
                     .get(),
-                children![
-                    (
-                        NodeBuilder::new().get_card(),
-                        children![(
-                            Text(String::from("")),
-                            Speed,
-                            text_resource.get_hud_text_props(24.0)
-                        )]
-                    ),
-                    (
-                        AutoJumpUi,
-                        NodeBuilder::new()
-                            .with_justify_content(JustifyContent::End)
-                            .get_card(),
-                        children![
-                            (
-                                Text::new("Auto-Jump"),
-                                text_resource.get_text_props(20.0, HUD_TEXT_COLOR),
-                            ),
-                            (
-                                Text::new("SHIFT+SPACE"),
-                                text_resource.get_hud_text_props(16.0),
-                            ),
-                        ],
-                    ),
-                ]
+                children![(
+                    NodeBuilder::new().get_card(),
+                    children![(
+                        Text(String::from("")),
+                        Speed,
+                        text_resource.get_hud_text_props(28.0)
+                    )]
+                ),]
             ),
         ],
     ));

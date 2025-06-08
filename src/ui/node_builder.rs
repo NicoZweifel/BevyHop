@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{BORDER, MARGIN, NORMAL_BUTTON, PADDING};
+use super::{BORDER, BORDER_RADIUS, MARGIN, NORMAL_BUTTON, PADDING};
 
 pub struct NodeBuilder {
     direction: FlexDirection,
@@ -102,7 +102,7 @@ impl NodeBuilder {
             self.with_padding(UiRect::all(PADDING))
                 .with_margin(UiRect::all(MARGIN))
                 .get(),
-            BorderRadius::all(Val::Px(10.)),
+            BorderRadius::all(BORDER_RADIUS),
         )
     }
 
@@ -118,9 +118,9 @@ impl NodeBuilder {
 
     pub fn get_card_props() -> CardProps {
         (
-            BorderRadius::all(Val::Px(10.)),
-            BackgroundColor(NORMAL_BUTTON.with_alpha(0.1)),
-            BorderColor(NORMAL_BUTTON.with_alpha(0.5)),
+            BorderRadius::all(BORDER_RADIUS),
+            BackgroundColor(NORMAL_BUTTON.with_alpha(0.5)),
+            BorderColor(NORMAL_BUTTON.with_alpha(0.8)),
         )
     }
 }
