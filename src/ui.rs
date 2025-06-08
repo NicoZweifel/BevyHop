@@ -30,10 +30,9 @@ impl Plugin for UiPlugin {
                 FpsOverlayPlugin {
                     config: FpsOverlayConfig {
                         text_config: TextFont {
-                            font_size: 14.0,
+                            font_size: 16.0,
                             ..default()
                         },
-                        // We can also change color of the overlay
                         text_color: HUD_TEXT_COLOR,
                         enabled: false,
                         ..default()
@@ -366,11 +365,8 @@ fn setup_pause_menu(
                     )],
                 ))
                 .observe(
-                    |_: Trigger<Pointer<Click>>,
-                     mut ns_app_state: ResMut<NextState<AppState>>,
-                     mut ns_paused: ResMut<NextState<PausedState>>| {
+                    |_: Trigger<Pointer<Click>>, mut ns_app_state: ResMut<NextState<AppState>>| {
                         ns_app_state.set(AppState::MainMenu);
-                        ns_paused.set(PausedState::Running);
                     },
                 );
 

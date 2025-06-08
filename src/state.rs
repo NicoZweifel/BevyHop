@@ -30,6 +30,7 @@ impl Plugin for StatePlugin {
         .init_state::<GameModeState>()
         .init_state::<PausedState>()
         .init_state::<DebugState>()
+        .add_systems(OnExit(AppState::InGame), resume)
         .add_systems(OnEnter(PausedState::Paused), pause_physics)
         .add_systems(OnEnter(PausedState::Running), resume_physics)
         .add_systems(OnEnter(DebugState::Enabled), start_physics_debug)
@@ -77,6 +78,10 @@ pub enum DebugState {
     #[default]
     Disabled,
     Enabled,
+}
+
+fn resume(mut ns: ResMut<NextState<PausedState>>) {
+    ns.set(PausedState::Running);
 }
 
 fn pause_physics(mut time: ResMut<Time<Physics>>) {
