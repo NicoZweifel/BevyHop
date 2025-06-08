@@ -28,7 +28,7 @@ impl Plugin for UiPlugin {
                 FpsOverlayPlugin {
                     config: FpsOverlayConfig {
                         text_config: TextFont {
-                            font_size: 10.0,
+                            font_size: 14.0,
                             ..default()
                         },
                         // We can also change color of the overlay
@@ -251,11 +251,11 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
                         children![
                             (
                                 Text::new("Auto-Jump"),
-                                text_resource.get_text_props(14.0, HUD_TEXT_COLOR),
+                                text_resource.get_text_props(18.0, HUD_TEXT_COLOR),
                             ),
                             (
                                 Text::new("SHIFT+SPACE"),
-                                text_resource.get_hud_text_props(10.0),
+                                text_resource.get_hud_text_props(14.0),
                             ),
                         ],
                     ),
