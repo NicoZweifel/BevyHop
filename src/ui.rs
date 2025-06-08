@@ -1,5 +1,6 @@
 use avian3d::prelude::*;
-use bevy::{prelude::*, window::CursorGrabMode};
+use bevy::{prelude::*, text::FontSmoothing, window::CursorGrabMode};
+use bevy_dev_tools::fps_overlay::*;
 use bevy_egui::EguiPlugin;
 use bevy_fps_controller::controller::*;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -24,6 +25,18 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(BACKGROUND))
             .add_plugins((
+                FpsOverlayPlugin {
+                    config: FpsOverlayConfig {
+                        text_config: TextFont {
+                            font_size: 10.0,
+                            ..default()
+                        },
+                        // We can also change color of the overlay
+                        text_color: HUD_TEXT_COLOR,
+                        enabled: false,
+                        ..default()
+                    },
+                },
                 EguiPlugin {
                     enable_multipass_for_primary_context: false,
                 },

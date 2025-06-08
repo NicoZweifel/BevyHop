@@ -4,6 +4,7 @@ use avian3d::{PhysicsPlugins, prelude::*};
 use bevy::{
     asset::{AssetMetaCheck, LoadState},
     prelude::*,
+    window::PresentMode,
 };
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::EffectAsset;
@@ -168,6 +169,7 @@ impl Plugin for CorePlugin {
                     .set(WindowPlugin {
                         primary_window: Window {
                             fit_canvas_to_parent: true,
+                            present_mode: PresentMode::AutoNoVsync,
                             ..default()
                         }
                         .into(),

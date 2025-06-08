@@ -2,6 +2,7 @@ use std::num::NonZeroUsize;
 
 use bevy::prelude::*;
 use bevy_console::*;
+use bevy_dev_tools::fps_overlay::FpsOverlayConfig;
 use bevy_fps_controller::controller::*;
 use clap::Parser;
 
@@ -16,7 +17,8 @@ impl Plugin for ConsolePlugin {
             .add_console_command::<LevelCommand, _>(level)
             .add_console_command::<DebugCommand, _>(debug)
             .add_console_command::<PauseCommand, _>(pause)
-            .add_console_command::<NoClipCommand, _>(noclip);
+            .add_console_command::<NoClipCommand, _>(noclip)
+            .add_console_command::<FpsCommand, _>(fps);
     }
 }
 
@@ -76,6 +78,18 @@ fn noclip(mut log: ConsoleCommand<NoClipCommand>, mut q_controller: Query<&mut F
             MoveMode::Ground => MoveMode::Noclip,
         }
     }
+}
+
+#[derive(Parser, ConsoleCommand)]
+#[command(name = "fps")]
+struct FpsCommand {}
+
+fn fps(mut log: ConsoleCommand<FpsCommand>, mut overlay: ResMut<FpsOverlayConfig>) {
+    let Some(Ok(FpsCommand {})) = log.take() else {
+        return;
+    };
+
+    overlay.enabled = !overlay.enabled;
 }
 
 #[derive(Parser, ConsoleCommand)]

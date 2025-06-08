@@ -26,10 +26,11 @@ For the best experience running natively is recommended.
 
 The console has a bunch of commands:
 
-- `pause` - toggles pause/resume
-- `debug` - toggles debug config (e.g. physics debug)
+- `pause` - toggle pause/resume
+- `debug` - toggle debug config (e.g. physics debug)
 - `level {level}` - go to level
 - `noclip` - fly/noclip
+- `fps` - toggle fps counter
 
 ### Known Issues
 
