@@ -8,6 +8,8 @@ use crate::prelude::*;
 
 pub struct UiPlugin;
 
+const MARGIN: Val = Val::Px(12.);
+
 const NORMAL_BUTTON: Color = Resurrect64::DARK_PURPLE_1;
 const HOVERED_BUTTON: Color = Resurrect64::DARK_PURPLE_2;
 const PRESSED_BUTTON: Color = Resurrect64::GRAY_PURPLE_1;
@@ -236,8 +238,6 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
         ],
     ));
 }
-
-const MARGIN: Val = Val::Px(12.);
 
 #[derive(Component)]
 struct PauseMenu;
