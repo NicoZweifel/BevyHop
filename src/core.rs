@@ -169,7 +169,8 @@ impl Plugin for CorePlugin {
                     .set(WindowPlugin {
                         primary_window: Window {
                             fit_canvas_to_parent: true,
-                            present_mode: PresentMode::AutoNoVsync,
+                            // TODO experiment with VSync off and frame limiting
+                            present_mode: default(),
                             ..default()
                         }
                         .into(),
