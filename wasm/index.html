@@ -10,7 +10,11 @@
       if (!error.message.startsWith("Using exceptions for control flow, don't mind me. This isn't actually an error!")) {
         throw error;
       }
-    });
+    }).then(()=>{
+        const elm = document.getElementsByTagName("canvas")[0];
+        elm.style.minHeight = "720px";
+      });
+
   </script>
 </body>
 
