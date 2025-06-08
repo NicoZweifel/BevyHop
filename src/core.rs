@@ -14,7 +14,7 @@ pub use crate::state::*;
 pub const LEVEL_COUNT: usize = 3;
 pub const SPAWN_POINT: Vec3 = Vec3::new(0.0, 8., 0.0);
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct AssetsLoading(pub Vec<UntypedHandle>);
 
 impl AssetsLoading {
@@ -144,6 +144,7 @@ pub struct CorePlugin;
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SpawnLevel>()
+            .insert_resource(AssetsLoading::default())
             .insert_resource(Time::<Fixed>::from_hz(128.0))
             .insert_resource(History::default())
             .register_type::<Prop>()
