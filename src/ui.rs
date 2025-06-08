@@ -1,5 +1,5 @@
 use avian3d::prelude::*;
-use bevy::{prelude::*, text::FontSmoothing, window::CursorGrabMode};
+use bevy::{ecs::spawn::SpawnRelatedBundle, prelude::*, window::CursorGrabMode};
 use bevy_dev_tools::fps_overlay::*;
 use bevy_egui::EguiPlugin;
 use bevy_fps_controller::controller::*;
@@ -9,7 +9,9 @@ use crate::prelude::*;
 
 pub struct UiPlugin;
 
+const PADDING: Val = Val::Px(12.);
 const MARGIN: Val = Val::Px(12.);
+const BORDER: Val = Val::Px(1.);
 
 const NORMAL_BUTTON: Color = Resurrect64::DARK_PURPLE_1;
 const HOVERED_BUTTON: Color = Resurrect64::DARK_PURPLE_2;
@@ -137,6 +139,9 @@ struct NodeBuilder {
     align_items: AlignItems,
     justify_content: JustifyContent,
     grow: bool,
+    padding: UiRect,
+    margin: UiRect,
+    border: UiRect,
 }
 
 impl Default for NodeBuilder {
@@ -146,9 +151,38 @@ impl Default for NodeBuilder {
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
             grow: false,
+            padding: UiRect::ZERO,
+            margin: UiRect::ZERO,
+            border: UiRect::ZERO,
         }
     }
 }
+
+impl From<&NodeBuilder> for Node {
+    fn from(value: &NodeBuilder) -> Self {
+        Self {
+            width: match value.grow {
+                true => Val::Percent(100.),
+                false => default(),
+            },
+            height: match value.grow {
+                true => Val::Percent(100.),
+                false => default(),
+            },
+            flex_direction: value.direction,
+            align_items: value.align_items,
+            justify_content: value.justify_content,
+            padding: value.margin,
+            margin: value.padding,
+            row_gap: MARGIN / 2.,
+            column_gap: MARGIN / 2.,
+            border: value.border,
+            ..default()
+        }
+    }
+}
+
+type CardProps = (BorderRadius, BackgroundColor, BorderColor);
 
 impl NodeBuilder {
     fn new() -> Self {
@@ -156,23 +190,7 @@ impl NodeBuilder {
     }
 
     fn get(&self) -> Node {
-        Node {
-            width: match self.grow {
-                true => Val::Percent(100.),
-                false => default(),
-            },
-            height: match self.grow {
-                true => Val::Percent(100.),
-                false => default(),
-            },
-            flex_direction: self.direction,
-            align_items: self.align_items,
-            justify_content: self.justify_content,
-            padding: UiRect::all(MARGIN),
-            row_gap: MARGIN,
-            column_gap: MARGIN,
-            ..Default::default()
-        }
+        self.into()
     }
 
     fn with_direction(&mut self, direction: FlexDirection) -> &mut Self {
@@ -195,8 +213,47 @@ impl NodeBuilder {
         self
     }
 
-    fn get_button(&self) -> (Button, Node, BorderRadius) {
-        (Button, self.get(), BorderRadius::all(Val::Px(10.)))
+    fn with_padding(&mut self, padding: UiRect) -> &mut Self {
+        self.padding = padding;
+        self
+    }
+
+    fn with_margin(&mut self, margin: UiRect) -> &mut Self {
+        self.margin = margin;
+        self
+    }
+
+    fn with_border(&mut self, border: UiRect) -> &mut Self {
+        self.border = border;
+        self
+    }
+
+    fn get_button(&mut self) -> (Button, Node, BorderRadius) {
+        (
+            Button,
+            self.with_padding(UiRect::all(PADDING))
+                .with_margin(UiRect::all(MARGIN))
+                .get(),
+            BorderRadius::all(Val::Px(10.)),
+        )
+    }
+
+    fn get_card(&mut self) -> (Node, CardProps) {
+        (
+            self.with_padding(UiRect::all(PADDING))
+                .with_margin(UiRect::all(MARGIN))
+                .with_border(UiRect::all(BORDER))
+                .get(),
+            NodeBuilder::get_card_props(),
+        )
+    }
+
+    fn get_card_props() -> CardProps {
+        (
+            BorderRadius::all(Val::Px(10.)),
+            BackgroundColor(NORMAL_BUTTON.with_alpha(0.1)),
+            BorderColor(NORMAL_BUTTON.with_alpha(0.5)),
+        )
     }
 }
 
@@ -206,6 +263,7 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
             .with_grow(true)
             .with_align_items(AlignItems::Start)
             .with_justify_content(JustifyContent::SpaceBetween)
+            .with_margin(UiRect::all(MARGIN))
             .get(),
         Hud,
         children![
@@ -218,14 +276,20 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
                     .get(),
                 children![
                     (
-                        Text(String::from("")),
-                        LevelDurationText,
-                        text_resource.get_hud_text_props(24.0),
+                        NodeBuilder::new().get_card(),
+                        children![(
+                            Text(String::from("")),
+                            LevelDurationText,
+                            text_resource.get_hud_text_props(24.0),
+                        )]
                     ),
                     (
-                        Text(String::from("")),
-                        RunDurationText,
-                        text_resource.get_hud_text_props(24.),
+                        NodeBuilder::new().get_card(),
+                        children![(
+                            Text(String::from("")),
+                            RunDurationText,
+                            text_resource.get_hud_text_props(24.),
+                        )]
                     ),
                 ]
             ),
@@ -238,24 +302,26 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
                     .get(),
                 children![
                     (
-                        Text(String::from("")),
-                        Speed,
-                        text_resource.get_hud_text_props(24.0),
+                        NodeBuilder::new().get_card(),
+                        children![(
+                            Text(String::from("")),
+                            Speed,
+                            text_resource.get_hud_text_props(24.0)
+                        )]
                     ),
                     (
                         AutoJumpUi,
                         NodeBuilder::new()
                             .with_justify_content(JustifyContent::End)
-                            .get(),
-                        BorderRadius::all(Val::Px(10.)),
+                            .get_card(),
                         children![
                             (
                                 Text::new("Auto-Jump"),
-                                text_resource.get_text_props(18.0, HUD_TEXT_COLOR),
+                                text_resource.get_text_props(20.0, HUD_TEXT_COLOR),
                             ),
                             (
                                 Text::new("SHIFT+SPACE"),
-                                text_resource.get_hud_text_props(14.0),
+                                text_resource.get_hud_text_props(16.0),
                             ),
                         ],
                     ),
@@ -282,36 +348,43 @@ fn setup_pause_menu(
         })),
     ))
     .with_children(|cmd| {
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(Text::new("Resume"), text_resource.get_button_text_props(),)],
-        ))
-        .observe(handle_resume);
+        cmd.spawn(NodeBuilder::new().get_card())
+            .with_children(|cmd| {
+                cmd.spawn(get_header(&text_resource));
 
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(
-                Text::new("Main Menu"),
-                text_resource.get_button_text_props()
-            )],
-        ))
-        .observe(
-            |_: Trigger<Pointer<Click>>,
-             mut ns_app_state: ResMut<NextState<AppState>>,
-             mut ns_paused: ResMut<NextState<PausedState>>| {
-                ns_app_state.set(AppState::MainMenu);
-                ns_paused.set(PausedState::Running);
-            },
-        );
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(Text::new("Resume"), text_resource.get_button_text_props(),)],
+                ))
+                .observe(handle_resume);
 
-        #[cfg(not(target_arch = "wasm32"))]
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(Text::new("Quit"), text_resource.get_button_text_props())],
-        ))
-        .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-            ew.write(AppExit::Success);
-        });
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(
+                        Text::new("Main Menu"),
+                        text_resource.get_button_text_props()
+                    )],
+                ))
+                .observe(
+                    |_: Trigger<Pointer<Click>>,
+                     mut ns_app_state: ResMut<NextState<AppState>>,
+                     mut ns_paused: ResMut<NextState<PausedState>>| {
+                        ns_app_state.set(AppState::MainMenu);
+                        ns_paused.set(PausedState::Running);
+                    },
+                );
+
+                #[cfg(not(target_arch = "wasm32"))]
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(Text::new("Quit"), text_resource.get_button_text_props())],
+                ))
+                .observe(
+                    |_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+                        ew.write(AppExit::Success);
+                    },
+                );
+            });
     });
 }
 
@@ -347,7 +420,7 @@ fn setup_loading_screen(mut cmd: Commands, text_resource: Res<TextResource>) {
         LoadingScreen,
         BackgroundColor(BACKGROUND),
         children![(
-            NodeBuilder::new().get(),
+            NodeBuilder::new().get_card(),
             children![(
                 Text::new("Loading..."),
                 text_resource.get_button_text_props()
@@ -371,33 +444,40 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         BackgroundColor(BACKGROUND),
     ))
     .with_children(|cmd| {
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(Text::new("Restart"), text_resource.get_button_text_props())],
-        ))
-        .observe(handle_restart);
+        cmd.spawn(NodeBuilder::new().get_card())
+            .with_children(|cmd| {
+                cmd.spawn(get_header(&text_resource));
 
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(
-                Text::new("Main Menu"),
-                text_resource.get_button_text_props()
-            )],
-        ))
-        .observe(
-            |_: Trigger<Pointer<Click>>, mut ns: ResMut<NextState<AppState>>| {
-                ns.set(AppState::MainMenu);
-            },
-        );
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(Text::new("Restart"), text_resource.get_button_text_props())],
+                ))
+                .observe(handle_restart);
 
-        #[cfg(not(target_arch = "wasm32"))]
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(Text::new("Quit"), text_resource.get_button_text_props())],
-        ))
-        .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-            ew.write(AppExit::Success);
-        });
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(
+                        Text::new("Main Menu"),
+                        text_resource.get_button_text_props()
+                    )],
+                ))
+                .observe(
+                    |_: Trigger<Pointer<Click>>, mut ns: ResMut<NextState<AppState>>| {
+                        ns.set(AppState::MainMenu);
+                    },
+                );
+
+                #[cfg(not(target_arch = "wasm32"))]
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(Text::new("Quit"), text_resource.get_button_text_props())],
+                ))
+                .observe(
+                    |_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+                        ew.write(AppExit::Success);
+                    },
+                );
+            });
     });
 }
 
@@ -423,6 +503,23 @@ fn handle_restart(
 #[derive(Component)]
 struct MainMenu;
 
+fn get_header(
+    text_resource: &Res<TextResource>,
+) -> (
+    (Node, CardProps),
+    SpawnRelatedBundle<ChildOf, Spawn<(Text, (TextFont, TextColor))>>,
+) {
+    (
+        NodeBuilder::new()
+            .with_margin(UiRect::bottom(MARGIN * 4.))
+            .get_card(),
+        children![(
+            Text(String::from("BevyHop")),
+            text_resource.get_text_props(60.0, Resurrect64::LIGHT_PURPLE),
+        )],
+    )
+}
+
 fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
     cmd.spawn((
         Camera3d::default(),
@@ -435,20 +532,27 @@ fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         MainMenu,
     ))
     .with_children(|cmd| {
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(Text::new("Play"), text_resource.get_button_text_props())],
-        ))
-        .observe(handle_play);
+        cmd.spawn(NodeBuilder::new().get_card())
+            .with_children(|cmd| {
+                cmd.spawn(get_header(&text_resource));
 
-        #[cfg(not(target_arch = "wasm32"))]
-        cmd.spawn((
-            NodeBuilder::new().get_button(),
-            children![(Text::new("Quit"), text_resource.get_button_text_props(),)],
-        ))
-        .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-            ew.write(AppExit::Success);
-        });
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(Text::new("Play"), text_resource.get_button_text_props())],
+                ))
+                .observe(handle_play);
+
+                #[cfg(not(target_arch = "wasm32"))]
+                cmd.spawn((
+                    NodeBuilder::new().get_button(),
+                    children![(Text::new("Quit"), text_resource.get_button_text_props(),)],
+                ))
+                .observe(
+                    |_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+                        ew.write(AppExit::Success);
+                    },
+                );
+            });
     });
 }
 
