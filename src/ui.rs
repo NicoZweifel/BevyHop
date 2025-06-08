@@ -22,45 +22,46 @@ const BUTTON_TEXT_COLOR: Color = Color::linear_rgb(0.9, 0.9, 0.9);
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            EguiPlugin {
-                enable_multipass_for_primary_context: false,
-            },
-            WorldInspectorPlugin::default().run_if(in_state(DebugState::Enabled)),
-            bevy_console::ConsolePlugin,
-        ))
-        .add_systems(
-            Startup,
-            (setup_font, setup_loading_screen.after(setup_font)),
-        )
-        .add_systems(
-            OnExit(AppState::Loading),
-            (cleanup::<LoadingScreen>, cleanup::<Camera3d>),
-        )
-        .add_systems(OnEnter(AppState::InGame), setup_hud)
-        .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
-        .add_systems(Update, button_system)
-        .add_systems(
-            Update,
-            (
-                update_speed_ui,
-                update_level_duration_ui,
-                update_run_duration_ui,
+        app.insert_resource(ClearColor(BACKGROUND))
+            .add_plugins((
+                EguiPlugin {
+                    enable_multipass_for_primary_context: false,
+                },
+                WorldInspectorPlugin::default().run_if(in_state(DebugState::Enabled)),
+                bevy_console::ConsolePlugin,
+            ))
+            .add_systems(
+                Startup,
+                (setup_font, setup_loading_screen.after(setup_font)),
             )
-                .in_set(GameplaySet),
-        )
-        .add_systems(OnEnter(AppState::MainMenu), setup_main_menu)
-        .add_systems(
-            OnExit(AppState::MainMenu),
-            (cleanup::<MainMenu>, cleanup::<Camera3d>),
-        )
-        .add_systems(OnEnter(PausedState::Paused), setup_pause_menu)
-        .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>)
-        .add_systems(OnEnter(AppState::GameOver), setup_game_over_menu)
-        .add_systems(
-            OnExit(AppState::GameOver),
-            (cleanup::<GameOverMenu>, cleanup::<Camera3d>),
-        );
+            .add_systems(
+                OnExit(AppState::Loading),
+                (cleanup::<LoadingScreen>, cleanup::<Camera3d>),
+            )
+            .add_systems(OnEnter(AppState::InGame), setup_hud)
+            .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
+            .add_systems(Update, button_system)
+            .add_systems(
+                Update,
+                (
+                    update_speed_ui,
+                    update_level_duration_ui,
+                    update_run_duration_ui,
+                )
+                    .in_set(GameplaySet),
+            )
+            .add_systems(OnEnter(AppState::MainMenu), setup_main_menu)
+            .add_systems(
+                OnExit(AppState::MainMenu),
+                (cleanup::<MainMenu>, cleanup::<Camera3d>),
+            )
+            .add_systems(OnEnter(PausedState::Paused), setup_pause_menu)
+            .add_systems(OnExit(PausedState::Paused), cleanup::<PauseMenu>)
+            .add_systems(OnEnter(AppState::GameOver), setup_game_over_menu)
+            .add_systems(
+                OnExit(AppState::GameOver),
+                (cleanup::<GameOverMenu>, cleanup::<Camera3d>),
+            );
     }
 }
 
