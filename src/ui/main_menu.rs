@@ -11,7 +11,7 @@ pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::MainMenu), setup_main_menu)
+        app.add_systems(OnEnter(AppState::MainMenu), setup)
             .add_systems(
                 OnExit(AppState::MainMenu),
                 (cleanup::<MainMenu>, cleanup::<Camera3d>),
@@ -19,17 +19,21 @@ impl Plugin for MainMenuPlugin {
     }
 }
 
-fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
-    main_menu_layout(&mut cmd).with_children(|cmd| {
+fn setup(mut cmd: Commands, text_resource: Res<TextResource>) {
+    layout(&mut cmd).with_children(|cmd| {
         cmd.spawn(NodeBuilder::new().get_card())
             .with_children(|cmd| {
-                cmd.spawn(get_header(&text_resource));
-                main_menu_content(cmd, &text_resource);
+                header(cmd, &text_resource);
+                content(cmd, &text_resource);
             });
     });
 }
 
-fn main_menu_layout<'a>(cmd: &'a mut Commands) -> EntityCommands<'a> {
+fn header(cmd: &mut RelatedSpawnerCommands<'_, ChildOf>, text_resource: &Res<TextResource>) {
+    cmd.spawn(get_header(text_resource));
+}
+
+fn layout<'a>(cmd: &'a mut Commands) -> EntityCommands<'a> {
     cmd.spawn((
         Camera3d::default(),
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
@@ -42,10 +46,7 @@ fn main_menu_layout<'a>(cmd: &'a mut Commands) -> EntityCommands<'a> {
     ))
 }
 
-fn main_menu_content(
-    cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    text_resource: &Res<TextResource>,
-) {
+fn content(cmd: &mut RelatedSpawnerCommands<'_, ChildOf>, text_resource: &Res<TextResource>) {
     cmd.spawn((
         NodeBuilder::new().get_button(),
         children![(Text::new("Play"), text_resource.get_button_text_props())],

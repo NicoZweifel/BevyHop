@@ -14,7 +14,7 @@ struct GameOverMenu;
 
 impl Plugin for GameOverPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::GameOver), setup_game_over_menu)
+        app.add_systems(OnEnter(AppState::GameOver), setup)
             .add_systems(
                 OnExit(AppState::GameOver),
                 (cleanup::<GameOverMenu>, cleanup::<Camera3d>),
@@ -22,22 +22,22 @@ impl Plugin for GameOverPlugin {
     }
 }
 
-fn setup_game_over_menu(
+fn setup(
     mut cmd: Commands,
     text_resource: Res<TextResource>,
     run_duration: Res<RunDuration>,
     level_duration: Res<LevelDuration>,
 ) {
-    game_over_layout(&mut cmd).with_children(|cmd| {
+    ayout(&mut cmd).with_children(|cmd| {
         cmd.spawn(NodeBuilder::new().get_card())
             .with_children(|cmd| {
-                game_over_header(cmd, &text_resource);
-                game_over_content(cmd, &text_resource, &run_duration, level_duration)
+                header(cmd, &text_resource);
+                content(cmd, &text_resource, &run_duration, level_duration)
             });
     });
 }
 
-fn game_over_layout<'a>(cmd: &'a mut Commands) -> EntityCommands<'a> {
+fn layout<'a>(cmd: &'a mut Commands) -> EntityCommands<'a> {
     cmd.spawn((
         Camera3d::default(),
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
@@ -50,14 +50,51 @@ fn game_over_layout<'a>(cmd: &'a mut Commands) -> EntityCommands<'a> {
     ))
 }
 
-fn game_over_header(
-    cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    text_resource: &Res<TextResource>,
-) {
+fn header(cmd: &mut RelatedSpawnerCommands<'_, ChildOf>, text_resource: &Res<TextResource>) {
     cmd.spawn(get_header(text_resource));
 }
 
-fn game_over_results(
+fn content(
+    cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
+    text_resource: &Res<TextResource>,
+    run_duration: &Res<RunDuration>,
+    level_duration: Res<LevelDuration>,
+) {
+    game_over_results(cmd, text_resource, run_duration, level_duration);
+
+    cmd.spawn((NodeBuilder::new().with_direction(FlexDirection::Row).get(),))
+        .with_children(|cmd| {
+            cmd.spawn((
+                NodeBuilder::new().get_button(),
+                children![(Text::new("Restart"), text_resource.get_button_text_props())],
+            ))
+            .observe(handle_restart);
+
+            cmd.spawn((
+                NodeBuilder::new().get_button(),
+                children![(
+                    Text::new("Main Menu"),
+                    text_resource.get_button_text_props()
+                )],
+            ))
+            .observe(
+                |_: Trigger<Pointer<Click>>, mut ns: ResMut<NextState<AppState>>| {
+                    ns.set(AppState::MainMenu);
+                },
+            );
+        });
+
+    #[cfg(not(target_arch = "wasm32"))]
+    cmd.spawn((
+        NodeBuilder::new().get_button(),
+        children![(Text::new("Quit"), text_resource.get_button_text_props())],
+    ))
+    .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
+        ew.write(AppExit::Success);
+    });
+}
+
+fn results(
     cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
     text_resource: &Res<TextResource>,
     run_duration: &Res<RunDuration>,
@@ -102,46 +139,6 @@ fn game_over_results(
                 )],
             ));
         });
-    });
-}
-
-fn game_over_content(
-    cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    text_resource: &Res<TextResource>,
-    run_duration: &Res<RunDuration>,
-    level_duration: Res<LevelDuration>,
-) {
-    game_over_results(cmd, text_resource, run_duration, level_duration);
-
-    cmd.spawn((NodeBuilder::new().with_direction(FlexDirection::Row).get(),))
-        .with_children(|cmd| {
-            cmd.spawn((
-                NodeBuilder::new().get_button(),
-                children![(Text::new("Restart"), text_resource.get_button_text_props())],
-            ))
-            .observe(handle_restart);
-
-            cmd.spawn((
-                NodeBuilder::new().get_button(),
-                children![(
-                    Text::new("Main Menu"),
-                    text_resource.get_button_text_props()
-                )],
-            ))
-            .observe(
-                |_: Trigger<Pointer<Click>>, mut ns: ResMut<NextState<AppState>>| {
-                    ns.set(AppState::MainMenu);
-                },
-            );
-        });
-
-    #[cfg(not(target_arch = "wasm32"))]
-    cmd.spawn((
-        NodeBuilder::new().get_button(),
-        children![(Text::new("Quit"), text_resource.get_button_text_props())],
-    ))
-    .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
-        ew.write(AppExit::Success);
     });
 }
 

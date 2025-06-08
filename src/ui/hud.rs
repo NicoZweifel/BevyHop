@@ -27,10 +27,13 @@ impl Plugin for HudPlugin {
 }
 
 fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
-    cmd.spawn((hud_layout(), children![hud_content(&text_resource)]));
+    cmd.spawn((
+        layout(),
+        children![header(&text_resource), content(&text_resource),],
+    ));
 }
 
-fn hud_layout() -> impl Bundle {
+fn layout() -> impl Bundle {
     (
         NodeBuilder::new()
             .with_grow(true)
@@ -41,53 +44,54 @@ fn hud_layout() -> impl Bundle {
     )
 }
 
-fn hud_content(text_resource: &Res<TextResource>) -> impl Bundle {
+fn header(text_resource: &Res<TextResource>) -> impl Bundle {
     (
-        (
-            NodeBuilder::new()
-                .with_direction(FlexDirection::Row)
-                .with_grow(true)
-                .with_margin(UiRect::all(MARGIN))
-                .with_align_items(AlignItems::Start)
-                .with_justify_content(JustifyContent::SpaceAround)
-                .get(),
-            children![
-                (
-                    NodeBuilder::new().get_card(),
-                    children![(
-                        Text(String::from("")),
-                        LevelDurationText,
-                        text_resource.get_hud_text_props(24.0),
-                    )]
-                ),
-                (
-                    NodeBuilder::new().get_card(),
-                    children![(
-                        Text(String::from("")),
-                        RunDurationText,
-                        text_resource.get_hud_text_props(24.),
-                    )]
-                ),
-            ],
-        ),
-        (
-            NodeBuilder::new()
-                .with_grow(true)
-                .with_direction(FlexDirection::Row)
-                .with_align_items(AlignItems::Center)
-                .with_margin(UiRect::all(MARGIN))
-                .with_padding(UiRect::all(PADDING * 2.))
-                .with_justify_content(JustifyContent::Center)
-                .get(),
-            children![(
+        NodeBuilder::new()
+            .with_direction(FlexDirection::Row)
+            .with_grow(true)
+            .with_margin(UiRect::all(MARGIN))
+            .with_align_items(AlignItems::Start)
+            .with_justify_content(JustifyContent::SpaceAround)
+            .get(),
+        children![
+            (
                 NodeBuilder::new().get_card(),
                 children![(
                     Text(String::from("")),
-                    Speed,
-                    text_resource.get_hud_text_props(28.0)
+                    LevelDurationText,
+                    text_resource.get_hud_text_props(24.0),
                 )]
-            ),],
-        ),
+            ),
+            (
+                NodeBuilder::new().get_card(),
+                children![(
+                    Text(String::from("")),
+                    RunDurationText,
+                    text_resource.get_hud_text_props(24.),
+                )]
+            ),
+        ],
+    )
+}
+
+fn content(text_resource: &Res<TextResource>) -> impl Bundle {
+    (
+        NodeBuilder::new()
+            .with_grow(true)
+            .with_direction(FlexDirection::Row)
+            .with_align_items(AlignItems::Center)
+            .with_margin(UiRect::all(MARGIN))
+            .with_padding(UiRect::all(PADDING * 2.))
+            .with_justify_content(JustifyContent::Center)
+            .get(),
+        children![(
+            NodeBuilder::new().get_card(),
+            children![(
+                Text(String::from("")),
+                Speed,
+                text_resource.get_hud_text_props(28.0)
+            )]
+        ),],
     )
 }
 
