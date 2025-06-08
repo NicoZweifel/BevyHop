@@ -107,6 +107,7 @@ struct UINode {
     direction: FlexDirection,
     align_items: AlignItems,
     justify_content: JustifyContent,
+    grow: bool,
 }
 
 impl Default for UINode {
@@ -115,6 +116,7 @@ impl Default for UINode {
             direction: FlexDirection::Column,
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
+            grow: false,
         }
     }
 }
@@ -152,6 +154,11 @@ impl UINode {
         self.justify_content = justify_content;
         self
     }
+
+    fn with_grow(&mut self, grow: bool) -> &mut Self {
+        self.grow = grow;
+        self
+    }
 }
 
 fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
@@ -165,6 +172,7 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
             (
                 UINode::new()
                     .with_direction(FlexDirection::Row)
+                    .with_grow(true)
                     .with_align_items(AlignItems::Start)
                     .with_justify_content(JustifyContent::SpaceBetween)
                     .get(),
@@ -184,6 +192,7 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
             (
                 UINode::new()
                     .with_direction(FlexDirection::Row)
+                    .with_grow(true)
                     .with_align_items(AlignItems::End)
                     .with_justify_content(JustifyContent::SpaceBetween)
                     .get(),
@@ -198,13 +207,6 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
                         UINode::new()
                             .with_justify_content(JustifyContent::End)
                             .get(),
-                        Node {
-                            flex_direction: FlexDirection::Column,
-                            justify_content: JustifyContent::End,
-                            align_items: AlignItems::Center,
-                            padding: UiRect::all(MARGIN),
-                            ..Default::default()
-                        },
                         BorderRadius::all(Val::Px(10.)),
                         children![
                             (
@@ -234,7 +236,7 @@ fn setup_pause_menu(
     text_resource: Res<TextResource>,
 ) {
     cmd.spawn((
-        UINode::new().get(),
+        UINode::new().with_grow(true).get(),
         PauseMenu,
         BackgroundColor(BACKGROUND.with_alpha(match debug_state.get() {
             DebugState::Disabled => 0.5,
@@ -286,12 +288,7 @@ fn setup_pause_menu(
 
         cmd.spawn((
             Button,
-            Node {
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                padding: UiRect::all(MARGIN),
-                ..Default::default()
-            },
+            UINode::new().get(),
             BorderRadius::all(Val::Px(10.)),
             children![(Text::new("Quit"), text_resource.get_button_text_props())],
         ))
@@ -304,13 +301,13 @@ fn setup_pause_menu(
 #[derive(Component)]
 struct GameOverMenu;
 
-fn setup_game_over_menu(mut cmd: Commands) {
+fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
     cmd.spawn((
         Camera3d::default(),
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
     ));
     cmd.spawn((
-        UINode::new().get(),
+        UINode::new().with_grow(true).get(),
         GameOverMenu,
         BackgroundColor(BACKGROUND),
     ))
@@ -348,21 +345,11 @@ fn setup_game_over_menu(mut cmd: Commands) {
         );
         cmd.spawn((
             Button,
-            Node {
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                padding: UiRect::all(MARGIN),
-
-                ..Default::default()
-            },
+            UINode::new().get(),
             BorderRadius::all(Val::Px(10.)),
             children![(
                 Text::new("Main Menu"),
-                TextFont {
-                    font_size: 40.0,
-                    ..default()
-                },
-                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
+                text_resource.get_button_text_props()
             )],
         ))
         .observe(
@@ -373,22 +360,9 @@ fn setup_game_over_menu(mut cmd: Commands) {
 
         cmd.spawn((
             Button,
-            Node {
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                padding: UiRect::all(MARGIN),
-
-                ..Default::default()
-            },
+            UINode::new().get(),
             BorderRadius::all(Val::Px(10.)),
-            children![(
-                Text::new("Quit"),
-                TextFont {
-                    font_size: 40.0,
-                    ..default()
-                },
-                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
-            )],
+            children![(Text::new("Quit"), text_resource.get_button_text_props())],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
             ew.write(AppExit::Success);
@@ -399,45 +373,22 @@ fn setup_game_over_menu(mut cmd: Commands) {
 #[derive(Component)]
 struct MainMenu;
 
-fn setup_main_menu(mut cmd: Commands) {
+fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
     cmd.spawn((
         Camera3d::default(),
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
     ));
     cmd.spawn((
         BackgroundColor(BACKGROUND),
-        Node {
-            width: Val::Percent(100.),
-            height: Val::Percent(100.),
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            padding: UiRect::all(MARGIN),
-            row_gap: MARGIN,
-            column_gap: MARGIN,
-            ..Default::default()
-        },
+        UINode::new().with_grow(true).get(),
         MainMenu,
     ))
     .with_children(|cmd| {
         cmd.spawn((
             Button,
-            Node {
-                padding: UiRect::all(MARGIN),
-                margin: UiRect::bottom(MARGIN),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..Default::default()
-            },
+            UINode::new().get(),
             BorderRadius::all(Val::Px(10.)),
-            children![(
-                Text::new("Play"),
-                TextFont {
-                    font_size: 40.0,
-                    ..default()
-                },
-                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
-            )],
+            children![(Text::new("Play"), text_resource.get_button_text_props())],
         ))
         .observe(
             |_: Trigger<Pointer<Click>>,
@@ -459,22 +410,9 @@ fn setup_main_menu(mut cmd: Commands) {
 
         cmd.spawn((
             Button,
-            Node {
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                padding: UiRect::all(MARGIN),
-
-                ..Default::default()
-            },
+            UINode::new().get(),
             BorderRadius::all(Val::Px(10.)),
-            children![(
-                Text::new("Quit"),
-                TextFont {
-                    font_size: 40.0,
-                    ..default()
-                },
-                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
-            )],
+            children![(Text::new("Quit"), text_resource.get_button_text_props(),)],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
             ew.write(AppExit::Success);
