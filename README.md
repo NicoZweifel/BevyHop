@@ -21,12 +21,23 @@ Air Strafing works by changing direction mid air, using synced mouse and strafe 
 
 For the best experience running natively is recommended.
 
+### Dev controls/console
+
+- Console - ``` ` ```
+
+The console has a bunch of commands:
+
+- `pause` - toggles pause/resume
+- `debug` - toggles debug config (e.g. physics debug)
+- `level {level}` - go to level
+- `noclip` - fly/noclip
+
 ### Known Issues
 
 - Mouse capture on itch.io bugging out
 - Janky Surf/Speed Boost.
 - HUD Design (TBD).
-- Edge falloff detection/Crouch issue. (https://github.com/qhdwight/bevy_fps_controller/pull/46)
+- [https://github.com/qhdwight/bevy_fps_controller/pull/46](Edge falloff detection/Crouch issue).
 - MouseWheel jump scroll event not kept around long enough to trigger proper jump sometimes (might fix this one soon for hardcore bhoppers that need/want it).
 - shadows cutting off after a certain distance.
 
@@ -44,8 +55,15 @@ Some things aren't final i.e.
 
 - Multiplayer
 - Multiple types of boosts
-- More fx/better checkpoint/end fx
+- dynamic and more particle/audio fx
 - Highscores
 
 
+### Credits
 
+- Color palette: [https://lospec.com/palette-list/resurr](Ressurect 64 by Kerrie Lake)
+- HRDI Turnberg Sky 3 - [https://hdrmaps.com/turnberg-sky-3/](HDRMAPS.com Royalty-Free)
+- HDRI Turnberg Sky 4 -  [https://hdrmaps.com/turnberg-sky-4/](HDRMAPS.com Royalty-Free)
+- HDRI Turnberg Sky 5 - [https://hdrmaps.com/turnberg-sky-5/](HDRMAPS.com Royalty-Free )
+- Ocean sound - [https://pixabay.com/sound-effects/gentle-ocean-waves-fizzing-bubbles-64980/](Gentle ocean waves fizzing bubbles by jackmichaelking (Freesound)) Pixabay Content License
+- Dive sound - [https://uppbeat.io/sfx/underwater-dive-impact/8179/24475](Underwater dive impact by Epic Stock Media)
