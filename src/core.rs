@@ -1,7 +1,10 @@
 use std::{marker::PhantomData, num::NonZeroUsize};
 
 use avian3d::{PhysicsPlugins, prelude::*};
-use bevy::{asset::AssetMetaCheck, prelude::*};
+use bevy::{
+    asset::{AssetMetaCheck, LoadState},
+    prelude::*,
+};
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::EffectAsset;
 use bevy_skein::SkeinPlugin;
@@ -10,6 +13,18 @@ pub use crate::state::*;
 
 pub const LEVEL_COUNT: usize = 3;
 pub const SPAWN_POINT: Vec3 = Vec3::new(0.0, 8., 0.0);
+
+#[derive(Resource)]
+pub struct AssetsLoading(pub Vec<UntypedHandle>);
+
+impl AssetsLoading {
+    pub fn get(&self, server: Res<AssetServer>) -> bool {
+        self.0.iter().any(|x| match server.get_load_state(x.id()) {
+            Some(x) => !matches!(x, LoadState::Loaded),
+            None => true,
+        })
+    }
+}
 
 #[derive(Event)]
 pub struct SpawnLevel(pub NonZeroUsize);

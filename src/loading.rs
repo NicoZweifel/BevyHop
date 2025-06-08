@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{asset::LoadState, prelude::*};
 
 use crate::prelude::*;
 
@@ -11,10 +11,13 @@ impl Plugin for LoadingPlugin {
 }
 
 fn loading(
+    mut cmd: Commands,
     scene: Option<Res<MainScene>>,
     fx: Option<Res<ParticleEffects>>,
     text_resource: Option<Res<TextResource>>,
     mut ns: ResMut<NextState<AppState>>,
+    server: Res<AssetServer>,
+    loading: Res<AssetsLoading>,
 ) {
     if scene.is_none() {
         return;
@@ -26,5 +29,8 @@ fn loading(
         return;
     }
 
-    ns.set(AppState::MainMenu);
+    if !loading.get(server) {
+        cmd.remove_resource::<AssetsLoading>();
+        ns.set(AppState::MainMenu);
+    };
 }
