@@ -30,7 +30,7 @@ fn loading(
     }
 
     if !loading.get(server) {
-        //cmd.remove_resource::<AssetsLoading>();
-        //ns.set(AppState::MainMenu);
+        cmd.remove_resource::<AssetsLoading>();
+        ns.set(AppState::MainMenu);
     };
 }
