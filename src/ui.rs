@@ -29,8 +29,14 @@ impl Plugin for UiPlugin {
             WorldInspectorPlugin::default().run_if(in_state(DebugState::Enabled)),
             bevy_console::ConsolePlugin,
         ))
-        .add_systems(Startup, setup_font.before(setup_loading_screen))
-        .add_systems(OnExit(AppState::Loading), cleanup::<LoadingScreen>)
+        .add_systems(
+            Startup,
+            (setup_font, setup_loading_screen.after(setup_font)),
+        )
+        .add_systems(
+            OnExit(AppState::Loading),
+            (cleanup::<LoadingScreen>, cleanup::<Camera3d>),
+        )
         .add_systems(OnEnter(AppState::InGame), setup_hud)
         .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
         .add_systems(Update, button_system)
@@ -317,20 +323,22 @@ struct LoadingScreen;
 
 fn setup_loading_screen(mut cmd: Commands, text_resource: Res<TextResource>) {
     cmd.spawn((
+        Camera3d::default(),
+        Transform::from_translation(Vec3::ZERO.with_y(15.)),
+    ));
+
+    cmd.spawn((
         NodeBuilder::new().with_grow(true).get(),
-        PauseMenu,
+        LoadingScreen,
         BackgroundColor(BACKGROUND),
-    ))
-    .with_children(|cmd| {
-        cmd.spawn((
+        children![(
             NodeBuilder::new().get(),
-            BorderRadius::all(Val::Px(10.)),
             children![(
                 Text::new("Loading..."),
-                text_resource.get_hud_text_props(40.)
+                text_resource.get_button_text_props()
             )],
-        ));
-    });
+        )],
+    ));
 }
 
 #[derive(Component)]
@@ -341,6 +349,7 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         Camera3d::default(),
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
     ));
+
     cmd.spawn((
         NodeBuilder::new().with_grow(true).get(),
         GameOverMenu,
@@ -352,6 +361,7 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
             children![(Text::new("Restart"), text_resource.get_button_text_props())],
         ))
         .observe(handle_restart);
+
         cmd.spawn((
             NodeBuilder::new().get_button(),
             children![(
@@ -402,6 +412,7 @@ fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         Camera3d::default(),
         Transform::from_translation(Vec3::ZERO.with_y(15.)),
     ));
+
     cmd.spawn((
         BackgroundColor(BACKGROUND),
         NodeBuilder::new().with_grow(true).get(),

@@ -33,20 +33,19 @@ For the best experience running natively is recommended.
 ### Early Release Notes
 
 Some things aren't final i.e.
- - itch.io game page/description
- - HDRI/Skyboxes
  - Level 3 Ending is a bit difficult.
  - Some Materials exports are messed up and need to be fixed in blender, especially end of lvl 3.
  - HUD/UI
  - maybe jump/walk sounds depending on how it turns out.
- - loading screen / use loading state
+ - the Run time is basically the sum of the best segments. Failed attempts don't count. Could be improved/differentiated in the future.
 
 
 ### Things that were cut due to time constraints but might be added in the future
 
 - Multiplayer
-- Multiple Types of Boosts
-- More Effects/Better Checkpoint/End Effects
+- Multiple types of boosts
+- More fx/better checkpoint/end fx
+- Highscores
 
 
 
