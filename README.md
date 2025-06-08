@@ -58,6 +58,7 @@ Some things aren't final i.e.
 
 ### Credits
 
+- Code hosted on [Github][10]
 - Color palette: [Ressurect 64 by Kerrie Lake][1]
 - HRDI Turnberg Sky 3 - [HDRMAPS.com Royalty-Free][2]
 - HDRI Turnberg Sky 4 - [HDRMAPS.com Royalty-Free][3]
@@ -75,4 +76,5 @@ Some things aren't final i.e.
 [7]:https://github.com/qhdwight/bevy_fps_controller/pull/46#issuecomment-2889270436
 [8]:https://adrianb.io/2015/02/14/bunnyhop.html
 [9]:https://github.com/qhdwight/bevy_fps_controller
+[10]:https://github.com/NicoZweifel/BevyHop
 
