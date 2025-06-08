@@ -166,6 +166,10 @@ impl UINode {
         self.grow = grow;
         self
     }
+
+    fn get_button(&self) -> (Button, Node, BorderRadius) {
+        (Button, self.get(), BorderRadius::all(Val::Px(10.)))
+    }
 }
 
 fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
@@ -253,17 +257,13 @@ fn setup_pause_menu(
     ))
     .with_children(|cmd| {
         cmd.spawn((
-            Button,
-            UINode::new().get(),
-            BorderRadius::all(Val::Px(10.)),
+            UINode::new().get_button(),
             children![(Text::new("Resume"), text_resource.get_button_text_props(),)],
         ))
         .observe(handle_resume);
 
         cmd.spawn((
-            UINode::new().get(),
-            Button,
-            BorderRadius::all(Val::Px(10.)),
+            UINode::new().get_button(),
             children![(
                 Text::new("Main Menu"),
                 text_resource.get_button_text_props()
@@ -279,9 +279,7 @@ fn setup_pause_menu(
         );
 
         cmd.spawn((
-            Button,
-            UINode::new().get(),
-            BorderRadius::all(Val::Px(10.)),
+            UINode::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props())],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
@@ -344,23 +342,12 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
     ))
     .with_children(|cmd| {
         cmd.spawn((
-            Button,
-            UINode::new().get(),
-            BorderRadius::all(Val::Px(10.)),
-            children![(
-                Text::new("Restart"),
-                TextFont {
-                    font_size: 40.0,
-                    ..default()
-                },
-                TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
-            )],
+            UINode::new().get_button(),
+            children![(Text::new("Restart"), text_resource.get_button_text_props())],
         ))
         .observe(handle_restart);
         cmd.spawn((
-            Button,
-            UINode::new().get(),
-            BorderRadius::all(Val::Px(10.)),
+            UINode::new().get_button(),
             children![(
                 Text::new("Main Menu"),
                 text_resource.get_button_text_props()
@@ -373,9 +360,7 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         );
 
         cmd.spawn((
-            Button,
-            UINode::new().get(),
-            BorderRadius::all(Val::Px(10.)),
+            UINode::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props())],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
@@ -418,17 +403,13 @@ fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
     ))
     .with_children(|cmd| {
         cmd.spawn((
-            Button,
-            UINode::new().get(),
-            BorderRadius::all(Val::Px(10.)),
+            UINode::new().get_button(),
             children![(Text::new("Play"), text_resource.get_button_text_props())],
         ))
         .observe(handle_play);
 
         cmd.spawn((
-            Button,
-            UINode::new().get(),
-            BorderRadius::all(Val::Px(10.)),
+            UINode::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props(),)],
         ))
         .observe(|_: Trigger<Pointer<Click>>, mut ew: EventWriter<AppExit>| {
