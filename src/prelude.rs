@@ -4,6 +4,7 @@ pub use crate::console::*;
 pub use crate::core::*;
 pub use crate::duration::*;
 pub use crate::input::*;
+pub use crate::loading::*;
 pub use crate::particle::*;
 pub use crate::player::*;
 pub use crate::ui::*;

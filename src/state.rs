@@ -26,7 +26,7 @@ impl Plugin for StatePlugin {
                     .run_if(in_state(GameModeState::Multiplayer)),
             ),
         )
-        .insert_state(AppState::MainMenu)
+        .insert_state(AppState::Loading)
         .init_state::<GameModeState>()
         .init_state::<PausedState>()
         .init_state::<DebugState>()
@@ -54,6 +54,7 @@ pub enum AppState {
     MainMenu,
     InGame,
     GameOver,
+    Loading,
 }
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]

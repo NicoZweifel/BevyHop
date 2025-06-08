@@ -4,6 +4,7 @@ mod console;
 mod core;
 mod duration;
 mod input;
+mod loading;
 mod particle;
 mod player;
 mod prelude;
@@ -27,6 +28,7 @@ fn main() {
             UiPlugin,
             ConsolePlugin,
             AudioPlugin,
+            LoadingPlugin,
         ))
         .run();
 }

@@ -128,7 +128,7 @@ fn translate_water(
 }
 
 #[derive(Resource)]
-struct MainScene {
+pub struct MainScene {
     levels: [Handle<Gltf>; LEVEL_COUNT],
     is_spawned: bool,
     skyboxes: [Handle<Image>; LEVEL_COUNT],
@@ -228,45 +228,6 @@ fn prop_colliders(
     }
 }
 
-fn boost_colliders(
-    mut cmd: Commands,
-    main_scene: Res<MainScene>,
-    q_boost: Query<(Entity, &MeshMaterial3d<StandardMaterial>), (With<SpeedBoost>, Without<Ready>)>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    effects: Res<ParticleEffects>,
-) {
-    if !main_scene.is_spawned {
-        return;
-    }
-
-    for (boost, mat) in &q_boost {
-        let material = materials.get_mut(mat).unwrap();
-        material.unlit = true;
-
-        cmd.entity(boost)
-            .insert((
-                Ready,
-                CollisionLayers::new(
-                    CollisionLayer::Boost,
-                    [CollisionLayer::Player, CollisionLayer::Prop],
-                ),
-                ColliderConstructor::ConvexHullFromMesh,
-                CollisionEventsEnabled,
-                children![
-                    ParticleEffect::new(effects.boost_idle_fx.clone()),
-                    PointLight {
-                        color: Resurrect64::GREEN,
-                        radius: 3.0,
-                        intensity: 3_000_000.0,
-                        shadows_enabled: false,
-                        ..default()
-                    }
-                ],
-            ))
-            .observe(boost_collision);
-    }
-}
-
 fn ground_colliders(
     mut cmd: Commands,
     main_scene: Res<MainScene>,
@@ -303,26 +264,28 @@ fn checkpoint_colliders(
                 ColliderConstructor::TrimeshFromMesh,
                 CollisionEventsEnabled,
             ))
-            .observe(
-                |trigger: Trigger<OnCollisionStart>,
-                 mut cmd: Commands,
-                 mut history: ResMut<History>,
-                 current_lvl: Res<CurrentLevel>,
-                 fx: Res<ParticleEffects>| {
-                    history.0.push(trigger.target());
-
-                    let other_entity = trigger.collider;
-
-                    cmd.entity(other_entity).with_child((
-                        ParticleEffect::new(fx.get_checkpoint_fx(current_lvl.get())),
-                        Visibility::Visible,
-                        Lifetime {
-                            timer: Timer::from_seconds(2., TimerMode::Once),
-                        },
-                    ));
-                },
-            );
+            .observe(checkpoint_collision);
     }
+}
+
+fn checkpoint_collision(
+    trigger: Trigger<OnCollisionStart>,
+    mut cmd: Commands,
+    mut history: ResMut<History>,
+    current_lvl: Res<CurrentLevel>,
+    fx: Res<ParticleEffects>,
+) {
+    history.0.push(trigger.target());
+
+    let other_entity = trigger.collider;
+
+    cmd.entity(other_entity).with_child((
+        ParticleEffect::new(fx.get_checkpoint_fx(current_lvl.get())),
+        Visibility::Visible,
+        Lifetime {
+            timer: Timer::from_seconds(2., TimerMode::Once),
+        },
+    ));
 }
 
 fn end_colliders(
@@ -342,22 +305,24 @@ fn end_colliders(
                 ColliderConstructor::TrimeshFromMesh,
                 CollisionEventsEnabled,
             ))
-            .observe(
-                |_: Trigger<OnCollisionStart>,
-                 current_lvl: Res<CurrentLevel>,
-                 mut ns: ResMut<NextState<AppState>>,
-                 mut ew: EventWriter<SpawnLevel>| {
-                    let next_level = current_lvl.get().get() + 1;
-
-                    if next_level > LEVEL_COUNT {
-                        ns.set(AppState::GameOver);
-                        return;
-                    }
-
-                    ew.write(SpawnLevel(NonZeroUsize::new(next_level).unwrap()));
-                },
-            );
+            .observe(end_collision);
     }
+}
+
+fn end_collision(
+    _: Trigger<OnCollisionStart>,
+    current_lvl: Res<CurrentLevel>,
+    mut ns: ResMut<NextState<AppState>>,
+    mut ew: EventWriter<SpawnLevel>,
+) {
+    let next_level = current_lvl.get().get() + 1;
+
+    if next_level > LEVEL_COUNT {
+        ns.set(AppState::GameOver);
+        return;
+    }
+
+    ew.write(SpawnLevel(NonZeroUsize::new(next_level).unwrap()));
 }
 
 fn spawn_level(
@@ -388,6 +353,45 @@ fn spawn_level(
         for mut transform in &mut q_player {
             transform.translation = spawn_point;
         }
+    }
+}
+
+fn boost_colliders(
+    mut cmd: Commands,
+    main_scene: Res<MainScene>,
+    q_boost: Query<(Entity, &MeshMaterial3d<StandardMaterial>), (With<SpeedBoost>, Without<Ready>)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    effects: Res<ParticleEffects>,
+) {
+    if !main_scene.is_spawned {
+        return;
+    }
+
+    for (boost, mat) in &q_boost {
+        let material = materials.get_mut(mat).unwrap();
+        material.unlit = true;
+
+        cmd.entity(boost)
+            .insert((
+                Ready,
+                CollisionLayers::new(
+                    CollisionLayer::Boost,
+                    [CollisionLayer::Player, CollisionLayer::Prop],
+                ),
+                ColliderConstructor::ConvexHullFromMesh,
+                CollisionEventsEnabled,
+                children![
+                    ParticleEffect::new(effects.boost_idle_fx.clone()),
+                    PointLight {
+                        color: Resurrect64::GREEN,
+                        radius: 3.0,
+                        intensity: 3_000_000.0,
+                        shadows_enabled: false,
+                        ..default()
+                    }
+                ],
+            ))
+            .observe(boost_collision);
     }
 }
 

@@ -27,7 +27,8 @@ impl Plugin for UiPlugin {
             WorldInspectorPlugin::default().run_if(in_state(DebugState::Enabled)),
             bevy_console::ConsolePlugin,
         ))
-        .add_systems(Startup, setup_font)
+        .add_systems(Startup, setup_font.before(setup_loading_screen))
+        .add_systems(OnExit(AppState::Loading), cleanup::<LoadingScreen>)
         .add_systems(OnEnter(AppState::InGame), setup_hud)
         .add_systems(OnExit(AppState::InGame), cleanup::<Hud>)
         .add_systems(Update, button_system)
@@ -56,7 +57,7 @@ impl Plugin for UiPlugin {
 }
 
 #[derive(Resource)]
-struct TextResource(Handle<Font>);
+pub struct TextResource(Handle<Font>);
 
 impl TextResource {
     fn get(&self) -> Handle<Font> {
@@ -128,8 +129,14 @@ impl UINode {
 
     fn get(&self) -> Node {
         Node {
-            width: Val::Percent(100.),
-            height: Val::Percent(100.),
+            width: match self.grow {
+                true => Val::Percent(100.),
+                false => default(),
+            },
+            height: match self.grow {
+                true => Val::Percent(100.),
+                false => default(),
+            },
             flex_direction: self.direction,
             align_items: self.align_items,
             justify_content: self.justify_content,
@@ -164,6 +171,7 @@ impl UINode {
 fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
     cmd.spawn((
         UINode::new()
+            .with_grow(true)
             .with_align_items(AlignItems::Start)
             .with_justify_content(JustifyContent::SpaceBetween)
             .get(),
@@ -171,8 +179,8 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
         children![
             (
                 UINode::new()
-                    .with_direction(FlexDirection::Row)
                     .with_grow(true)
+                    .with_direction(FlexDirection::Row)
                     .with_align_items(AlignItems::Start)
                     .with_justify_content(JustifyContent::SpaceBetween)
                     .get(),
@@ -191,8 +199,8 @@ fn setup_hud(mut cmd: Commands, text_resource: Res<TextResource>) {
             ),
             (
                 UINode::new()
-                    .with_direction(FlexDirection::Row)
                     .with_grow(true)
+                    .with_direction(FlexDirection::Row)
                     .with_align_items(AlignItems::End)
                     .with_justify_content(JustifyContent::SpaceBetween)
                     .get(),
@@ -250,23 +258,7 @@ fn setup_pause_menu(
             BorderRadius::all(Val::Px(10.)),
             children![(Text::new("Resume"), text_resource.get_button_text_props(),)],
         ))
-        .observe(
-            |_: Trigger<Pointer<Click>>,
-             mut ns: ResMut<NextState<PausedState>>,
-
-             mut window_query: Query<&mut Window>,
-             mut controller_query: Query<&mut FpsController>| {
-                ns.set(PausedState::Running);
-
-                for mut window in &mut window_query {
-                    window.cursor_options.grab_mode = CursorGrabMode::Locked;
-                    window.cursor_options.visible = false;
-                    for mut controller in &mut controller_query {
-                        controller.enable_input = true;
-                    }
-                }
-            },
-        );
+        .observe(handle_resume);
 
         cmd.spawn((
             UINode::new().get(),
@@ -298,6 +290,45 @@ fn setup_pause_menu(
     });
 }
 
+fn handle_resume(
+    _: Trigger<Pointer<Click>>,
+    mut ns: ResMut<NextState<PausedState>>,
+
+    mut window_query: Query<&mut Window>,
+    mut controller_query: Query<&mut FpsController>,
+) {
+    ns.set(PausedState::Running);
+
+    for mut window in &mut window_query {
+        window.cursor_options.grab_mode = CursorGrabMode::Locked;
+        window.cursor_options.visible = false;
+        for mut controller in &mut controller_query {
+            controller.enable_input = true;
+        }
+    }
+}
+
+#[derive(Component)]
+struct LoadingScreen;
+
+fn setup_loading_screen(mut cmd: Commands, text_resource: Res<TextResource>) {
+    cmd.spawn((
+        UINode::new().with_grow(true).get(),
+        PauseMenu,
+        BackgroundColor(BACKGROUND),
+    ))
+    .with_children(|cmd| {
+        cmd.spawn((
+            UINode::new().get(),
+            BorderRadius::all(Val::Px(10.)),
+            children![(
+                Text::new("Loading..."),
+                text_resource.get_hud_text_props(40.)
+            )],
+        ));
+    });
+}
+
 #[derive(Component)]
 struct GameOverMenu;
 
@@ -325,24 +356,7 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
                 TextColor(Color::linear_rgb(0.9, 0.9, 0.9)),
             )],
         ))
-        .observe(
-            |_: Trigger<Pointer<Click>>,
-             mut ns_paused_state: ResMut<NextState<PausedState>>,
-             mut ns_app_state: ResMut<NextState<AppState>>,
-             mut window_query: Query<&mut Window>,
-             mut controller_query: Query<&mut FpsController>| {
-                ns_paused_state.set(PausedState::Running);
-                ns_app_state.set(AppState::InGame);
-
-                for mut window in &mut window_query {
-                    window.cursor_options.grab_mode = CursorGrabMode::Locked;
-                    window.cursor_options.visible = false;
-                    for mut controller in &mut controller_query {
-                        controller.enable_input = true;
-                    }
-                }
-            },
-        );
+        .observe(handle_restart);
         cmd.spawn((
             Button,
             UINode::new().get(),
@@ -370,6 +384,25 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
     });
 }
 
+fn handle_restart(
+    _: Trigger<Pointer<Click>>,
+    mut ns_paused_state: ResMut<NextState<PausedState>>,
+    mut ns_app_state: ResMut<NextState<AppState>>,
+    mut window_query: Query<&mut Window>,
+    mut controller_query: Query<&mut FpsController>,
+) {
+    ns_paused_state.set(PausedState::Running);
+    ns_app_state.set(AppState::InGame);
+
+    for mut window in &mut window_query {
+        window.cursor_options.grab_mode = CursorGrabMode::Locked;
+        window.cursor_options.visible = false;
+        for mut controller in &mut controller_query {
+            controller.enable_input = true;
+        }
+    }
+}
+
 #[derive(Component)]
 struct MainMenu;
 
@@ -390,23 +423,7 @@ fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
             BorderRadius::all(Val::Px(10.)),
             children![(Text::new("Play"), text_resource.get_button_text_props())],
         ))
-        .observe(
-            |_: Trigger<Pointer<Click>>,
-             mut ns: ResMut<NextState<AppState>>,
-
-             mut window_query: Query<&mut Window>,
-             mut controller_query: Query<&mut FpsController>| {
-                ns.set(AppState::InGame);
-
-                for mut window in &mut window_query {
-                    window.cursor_options.grab_mode = CursorGrabMode::Locked;
-                    window.cursor_options.visible = false;
-                    for mut controller in &mut controller_query {
-                        controller.enable_input = true;
-                    }
-                }
-            },
-        );
+        .observe(handle_play);
 
         cmd.spawn((
             Button,
@@ -418,6 +435,24 @@ fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
             ew.write(AppExit::Success);
         });
     });
+}
+
+fn handle_play(
+    _: Trigger<Pointer<Click>>,
+    mut ns: ResMut<NextState<AppState>>,
+
+    mut window_query: Query<&mut Window>,
+    mut controller_query: Query<&mut FpsController>,
+) {
+    ns.set(AppState::InGame);
+
+    for mut window in &mut window_query {
+        window.cursor_options.grab_mode = CursorGrabMode::Locked;
+        window.cursor_options.visible = false;
+        for mut controller in &mut controller_query {
+            controller.enable_input = true;
+        }
+    }
 }
 
 fn update_speed_ui(
