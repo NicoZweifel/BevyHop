@@ -290,6 +290,7 @@ fn setup_pause_menu(
             },
         );
 
+        #[cfg(not(target_arch = "wasm32"))]
         cmd.spawn((
             NodeBuilder::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props())],
@@ -375,6 +376,7 @@ fn setup_game_over_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
             },
         );
 
+        #[cfg(not(target_arch = "wasm32"))]
         cmd.spawn((
             NodeBuilder::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props())],
@@ -425,6 +427,7 @@ fn setup_main_menu(mut cmd: Commands, text_resource: Res<TextResource>) {
         ))
         .observe(handle_play);
 
+        #[cfg(not(target_arch = "wasm32"))]
         cmd.spawn((
             NodeBuilder::new().get_button(),
             children![(Text::new("Quit"), text_resource.get_button_text_props(),)],

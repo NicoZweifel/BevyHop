@@ -37,7 +37,7 @@ Some things aren't final i.e.
  - Some Materials exports are messed up and need to be fixed in blender, especially end of lvl 3.
  - HUD/UI
  - maybe jump/walk sounds depending on how it turns out.
- - the Run time is basically the sum of the best segments. Failed attempts don't count. Could be improved/differentiated in the future.
+ - the `Run` time is basically the sum of the best segments. Failed attempts don't count. Could be improved/differentiated in the future.
 
 
 ### Things that were cut due to time constraints but might be added in the future
