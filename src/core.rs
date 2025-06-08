@@ -4,7 +4,6 @@ use avian3d::{PhysicsPlugins, prelude::*};
 use bevy::{
     asset::{AssetMetaCheck, LoadState},
     prelude::*,
-    window::PresentMode,
 };
 use bevy_fps_controller::controller::LogicalPlayer;
 use bevy_hanabi::EffectAsset;
