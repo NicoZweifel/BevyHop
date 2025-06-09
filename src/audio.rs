@@ -2,7 +2,7 @@ use bevy::{
     audio::{PlaybackMode, Volume},
     prelude::*,
 };
-use bevy_fps_controller::controller::{FpsController, FpsControllerInput, LogicalPlayer};
+use bevy_fps_controller::controller::*;
 
 use crate::core::*;
 
