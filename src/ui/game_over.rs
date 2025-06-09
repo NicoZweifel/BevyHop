@@ -28,11 +28,12 @@ fn setup(
     run_duration: Res<RunDuration>,
     level_duration: Res<LevelDuration>,
 ) {
-    ayout(&mut cmd).with_children(|cmd| {
+    layout(&mut cmd).with_children(|cmd| {
         cmd.spawn(NodeBuilder::new().get_card())
             .with_children(|cmd| {
                 header(cmd, &text_resource);
-                content(cmd, &text_resource, &run_duration, level_duration)
+                content(cmd, &text_resource, &run_duration, level_duration);
+                actions(cmd, &text_resource);
             });
     });
 }
@@ -54,14 +55,7 @@ fn header(cmd: &mut RelatedSpawnerCommands<'_, ChildOf>, text_resource: &Res<Tex
     cmd.spawn(get_header(text_resource));
 }
 
-fn content(
-    cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
-    text_resource: &Res<TextResource>,
-    run_duration: &Res<RunDuration>,
-    level_duration: Res<LevelDuration>,
-) {
-    game_over_results(cmd, text_resource, run_duration, level_duration);
-
+fn actions(cmd: &mut RelatedSpawnerCommands<'_, ChildOf>, text_resource: &Res<TextResource>) {
     cmd.spawn((NodeBuilder::new().with_direction(FlexDirection::Row).get(),))
         .with_children(|cmd| {
             cmd.spawn((
@@ -94,7 +88,7 @@ fn content(
     });
 }
 
-fn results(
+fn content(
     cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
     text_resource: &Res<TextResource>,
     run_duration: &Res<RunDuration>,

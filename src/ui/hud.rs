@@ -40,6 +40,7 @@ fn layout() -> impl Bundle {
             .with_align_items(AlignItems::Start)
             .with_justify_content(JustifyContent::SpaceBetween)
             .get(),
+        Pickable::IGNORE,
         Hud,
     )
 }
@@ -49,13 +50,14 @@ fn header(text_resource: &Res<TextResource>) -> impl Bundle {
         NodeBuilder::new()
             .with_direction(FlexDirection::Row)
             .with_grow(true)
-            .with_margin(UiRect::all(MARGIN))
             .with_align_items(AlignItems::Start)
             .with_justify_content(JustifyContent::SpaceAround)
             .get(),
+        Pickable::IGNORE,
         children![
             (
                 NodeBuilder::new().get_card(),
+                Pickable::IGNORE,
                 children![(
                     Text(String::from("")),
                     LevelDurationText,
@@ -64,6 +66,7 @@ fn header(text_resource: &Res<TextResource>) -> impl Bundle {
             ),
             (
                 NodeBuilder::new().get_card(),
+                Pickable::IGNORE,
                 children![(
                     Text(String::from("")),
                     RunDurationText,
@@ -84,8 +87,10 @@ fn content(text_resource: &Res<TextResource>) -> impl Bundle {
             .with_padding(UiRect::all(PADDING * 2.))
             .with_justify_content(JustifyContent::Center)
             .get(),
+        Pickable::IGNORE,
         children![(
             NodeBuilder::new().get_card(),
+            Pickable::IGNORE,
             children![(
                 Text(String::from("")),
                 Speed,
