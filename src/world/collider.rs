@@ -1,7 +1,4 @@
-use bevy::{
-    audio::{SpatialScale, Volume},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 use avian3d::prelude::*;
 use bevy_hanabi::ParticleEffect;
