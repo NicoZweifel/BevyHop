@@ -34,18 +34,15 @@ The console has a bunch of commands:
 
 ### Known Issues
 
-- Mouse capture on itch.io bugging out
+- Mouse capture release/in-game pause on itch.io/wasm/fullscreen requires pressing esacpe twice.
 - Janky Surf/Speed Boost.
-- HUD Design (TBD).
 - [Edge falloff detection/Crouch issue][7].
 - MouseWheel jump scroll event not kept around long enough to trigger proper jump sometimes (might fix this one soon for hardcore bhoppers that need/want it).
 - shadows cutting off after a certain distance.
 
-### Early Release Notes
+###  Release Notes
 
-Some things aren't final i.e.
- - maybe jump/walk sounds depending on how it turns out.
- - the `Run` time is basically the sum of the best segments. Failed attempts don't count. Could be improved/differentiated in the future.
+ - The `Run` time is basically the sum of the best segments. Failed attempts don't count. Could be improved/differentiated in the future.
 
 
 ### Things that were cut due to time constraints but might be added in the future
