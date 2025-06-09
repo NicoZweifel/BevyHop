@@ -20,7 +20,7 @@ impl TextResource {
     pub fn get_header_text_font(&self) -> TextFont {
         TextFont {
             font: self.header_font.clone(),
-            font_size: 92.,
+            font_size: 144.,
             ..default()
         }
     }
@@ -38,6 +38,6 @@ impl TextResource {
     }
 
     pub fn get_button_text_props(&self) -> impl Bundle {
-        (self.get_text_font(54.), TextColor(BUTTON_TEXT_COLOR))
+        (self.get_text_font(28.), TextColor(BUTTON_TEXT_COLOR))
     }
 }

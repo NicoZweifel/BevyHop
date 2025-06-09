@@ -54,6 +54,7 @@ Some things aren't final i.e.
 - Multiple types of boosts
 - dynamic and more particle/sound fx
 - Highscores
+- Settings Page
 
 
 ### Credits
@@ -66,7 +67,7 @@ Some things aren't final i.e.
 - Ocean sound - [Gentle ocean waves fizzing bubbles by jackmichaelking (Freesound) Pixabay Content License][5]
 - Dive sound - [Underwater dive impact by Epic Stock Media][6]
 - Default Font - [Fira Mono by Carrois Apostrophe, The Mozilla Corporation and Telefonica S.A.  SIL Open Font License, Version 1.1][11]
-- Header Font - [The Amatic SC Project Authors][12]
+- Header Font - [The Cherry Bomb Project Authors][12]
 
 
 [1]: https://lospec.com/palette-list/resurrect-64
@@ -80,4 +81,4 @@ Some things aren't final i.e.
 [9]:https://github.com/qhdwight/bevy_fps_controller
 [10]:https://github.com/NicoZweifel/BevyHop
 [11]:https://fonts.google.com/specimen/Fira+Mono
-[12]:https://github.com/googlefonts/AmaticSC
+[12]:https://github.com/satsuyako/CherryBomb

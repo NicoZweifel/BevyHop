@@ -20,13 +20,16 @@ impl Plugin for AudioPlugin {
 fn setup(asset_server: Res<AssetServer>, mut cmd: Commands, mut loading: ResMut<AssetsLoading>) {
     let ocean_sound = asset_server.load("ocean_sound/ocean.mp3");
     let dive_sound = asset_server.load("dive_sound/dive.mp3");
+    let boost_sound = asset_server.load("boost_sound/ui-sound-270349.mp3");
 
     loading.0.push(ocean_sound.clone().into());
     loading.0.push(dive_sound.clone().into());
+    loading.0.push(boost_sound.clone().into());
 
     cmd.insert_resource(Sounds {
         ocean_sound,
         dive_sound,
+        boost_sound,
     });
 }
 

@@ -30,6 +30,7 @@ impl AssetsLoading {
 pub struct Sounds {
     pub dive_sound: Handle<AudioSource>,
     pub ocean_sound: Handle<AudioSource>,
+    pub boost_sound: Handle<AudioSource>,
 }
 
 #[derive(Event)]

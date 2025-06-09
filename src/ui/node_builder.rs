@@ -42,8 +42,8 @@ impl From<&NodeBuilder> for Node {
             justify_content: value.justify_content,
             padding: value.padding,
             margin: value.margin,
-            row_gap: MARGIN,
-            column_gap: MARGIN,
+            row_gap: MARGIN / 2.,
+            column_gap: MARGIN / 2.,
             border: value.border,
             ..default()
         }
@@ -100,12 +100,16 @@ impl NodeBuilder {
         (
             Button,
             self.with_padding(if padding == UiRect::ZERO {
-                UiRect::all(PADDING)
+                UiRect::all(PADDING / 2.)
+                    .with_right(PADDING)
+                    .with_left(PADDING)
             } else {
                 padding
             })
             .with_margin(if margin == UiRect::ZERO {
-                UiRect::all(MARGIN)
+                UiRect::all(MARGIN / 2.)
+                    .with_right(PADDING)
+                    .with_left(PADDING)
             } else {
                 margin
             })
@@ -142,8 +146,8 @@ impl NodeBuilder {
     pub fn get_card_props() -> impl Bundle {
         (
             BorderRadius::all(BORDER_RADIUS),
-            BackgroundColor(NORMAL_BUTTON.with_alpha(0.5)),
-            BorderColor(NORMAL_BUTTON.with_alpha(0.8)),
+            BackgroundColor(NORMAL_BUTTON.with_alpha(0.7)),
+            BorderColor(NORMAL_BUTTON.with_alpha(0.9)),
         )
     }
 }

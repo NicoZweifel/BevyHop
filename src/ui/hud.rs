@@ -62,7 +62,7 @@ fn header(text_resource: &Res<TextResource>) -> impl Bundle {
                 children![(
                     Text(String::from("")),
                     LevelDurationText,
-                    text_resource.get_hud_text_props(24.0),
+                    text_resource.get_hud_text_props(19.0),
                 )]
             ),
             (
@@ -71,7 +71,7 @@ fn header(text_resource: &Res<TextResource>) -> impl Bundle {
                 children![(
                     Text(String::from("")),
                     RunDurationText,
-                    text_resource.get_hud_text_props(24.),
+                    text_resource.get_hud_text_props(19.),
                 )]
             ),
         ],
@@ -95,7 +95,7 @@ fn content(text_resource: &Res<TextResource>) -> impl Bundle {
             children![(
                 Text(String::from("")),
                 Speed,
-                text_resource.get_hud_text_props(28.0)
+                text_resource.get_hud_text_props(33.0)
             )]
         ),],
     )

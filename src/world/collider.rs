@@ -1,4 +1,7 @@
-use bevy::prelude::*;
+use bevy::{
+    audio::{PlaybackMode, Volume},
+    prelude::*,
+};
 
 use avian3d::prelude::*;
 use bevy_hanabi::ParticleEffect;
@@ -187,6 +190,7 @@ fn boost_collision(
     q_gtf: Query<&GlobalTransform>,
     fx: Res<ParticleEffects>,
     mut q_boosted: Query<&mut LinearVelocity>,
+    sounds: Res<Sounds>,
 ) {
     let boost = trigger.target();
 
@@ -218,6 +222,16 @@ fn boost_collision(
         Transform::from_translation(gtf.translation()),
         Lifetime {
             timer: Timer::from_seconds(2., TimerMode::Once),
+        },
+    ));
+
+    cmd.spawn((
+        OceanSound,
+        AudioPlayer::new(sounds.boost_sound.clone()),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: Volume::Linear(0.2),
+            ..default()
         },
     ));
 }
