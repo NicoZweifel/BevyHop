@@ -30,20 +30,26 @@ impl Plugin for DurationPlugin {
     }
 }
 
-pub fn reset_run_duration(mut run_duration: ResMut<RunDuration>) {
+pub fn reset_run_duration(mut run_duration: ResMut<RunDuration>, mut timer: ResMut<LevelDuration>) {
     run_duration.reset();
+    timer.0.reset();
 }
 
 fn reset_timer(
-    mut er: EventReader<Respawn<LogicalPlayer>>,
+    mut er_respawn: EventReader<Respawn<LogicalPlayer>>,
     mut timer: ResMut<LevelDuration>,
     history: Res<History>,
+    mut er_level: EventReader<SpawnLevel>,
 ) {
+    for _ in er_level.read() {
+        timer.0.reset();
+    }
+
     if !history.empty() {
         return;
     }
 
-    for _ in er.read() {
+    for _ in er_respawn.read() {
         timer.0.reset();
     }
 }

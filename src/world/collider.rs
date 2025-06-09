@@ -149,7 +149,7 @@ fn end_collision(
 ) {
     let next_level = current_lvl.get().get() + 1;
 
-    run_duration.results[current_lvl.get().get()] = level_duration.0.elapsed();
+    run_duration.results[current_lvl.get().get() - 1] = level_duration.0.elapsed();
 
     if next_level > LEVEL_COUNT {
         ns.set(AppState::GameOver);

@@ -203,6 +203,8 @@ fn spawn_level(
     mut main_scene: ResMut<MainScene>,
     mut er: EventReader<SpawnLevel>,
     mut q_player: Query<&mut Transform, With<LogicalPlayer>>,
+
+    mut timer: ResMut<LevelDuration>,
 ) {
     let spawn_point = SPAWN_POINT;
 
@@ -210,6 +212,7 @@ fn spawn_level(
 
     for e in er.read() {
         history.0.clear();
+        timer.0.reset();
 
         current_level.0 = e.0;
         main_scene.is_spawned = false;
