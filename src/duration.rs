@@ -13,14 +13,25 @@ pub struct RunDuration {
     pub results: [Duration; LEVEL_COUNT],
 }
 
+impl RunDuration {
+    fn reset(&mut self) {
+        (0..LEVEL_COUNT).for_each(|x| self.results[x] = Duration::default());
+    }
+}
+
 pub struct DurationPlugin;
 
 impl Plugin for DurationPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(LevelDuration::default())
             .insert_resource(RunDuration::default())
-            .add_systems(Update, reset_timer);
+            .add_systems(Update, reset_timer)
+            .add_systems(OnEnter(AppState::InGame), reset_run_duration);
     }
+}
+
+pub fn reset_run_duration(mut run_duration: ResMut<RunDuration>) {
+    run_duration.reset();
 }
 
 fn reset_timer(

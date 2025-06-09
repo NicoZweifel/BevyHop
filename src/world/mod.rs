@@ -199,8 +199,6 @@ fn spawn_level(
     mut cmd: Commands,
     mut history: ResMut<History>,
     scene: Single<Entity, With<SceneRoot>>,
-    level_duration: Res<LevelDuration>,
-    mut run_duration: ResMut<RunDuration>,
     mut current_level: ResMut<CurrentLevel>,
     mut main_scene: ResMut<MainScene>,
     mut er: EventReader<SpawnLevel>,
@@ -212,8 +210,6 @@ fn spawn_level(
 
     for e in er.read() {
         history.0.clear();
-
-        run_duration.results[current_level.get().get() - 1] = level_duration.0.elapsed();
 
         current_level.0 = e.0;
         main_scene.is_spawned = false;

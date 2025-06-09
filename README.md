@@ -67,6 +67,8 @@ Some things aren't final i.e.
 - Ocean sound - [Gentle ocean waves fizzing bubbles by jackmichaelking (Freesound) Pixabay Content License][5]
 - Dive sound - [Underwater dive impact by Epic Stock Media][6]
 - Boost sound - [RasoolAsaad Pixabay Content License][13]
+- Glass break sound - [mccormick_iain (Freesound) Pixabay Content License][14]
+- Glass shatter sound - [u_3hzvwrt3hc Pixabay Content License][14]
 - Default Font - [Fira Mono by Carrois Apostrophe, The Mozilla Corporation and Telefonica S.A.  SIL Open Font License, Version 1.1][11]
 - Header Font - [The Cherry Bomb Project Authors][12]
 

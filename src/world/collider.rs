@@ -94,6 +94,7 @@ fn checkpoint_collision(
     mut history: ResMut<History>,
     current_lvl: Res<CurrentLevel>,
     fx: Res<ParticleEffects>,
+    sounds: Res<Sounds>,
 ) {
     history.0.push(trigger.target());
 
@@ -104,6 +105,15 @@ fn checkpoint_collision(
         Visibility::Visible,
         Lifetime {
             timer: Timer::from_seconds(2., TimerMode::Once),
+        },
+    ));
+
+    cmd.spawn((
+        AudioPlayer::new(sounds.glass_sound.clone()),
+        PlaybackSettings {
+            mode: PlaybackMode::Despawn,
+            volume: Volume::Linear(0.1),
+            ..default()
         },
     ));
 }
@@ -134,8 +144,12 @@ fn end_collision(
     current_lvl: Res<CurrentLevel>,
     mut ns: ResMut<NextState<AppState>>,
     mut ew: EventWriter<SpawnLevel>,
+    level_duration: Res<LevelDuration>,
+    mut run_duration: ResMut<RunDuration>,
 ) {
     let next_level = current_lvl.get().get() + 1;
+
+    run_duration.results[current_lvl.get().get()] = level_duration.0.elapsed();
 
     if next_level > LEVEL_COUNT {
         ns.set(AppState::GameOver);

@@ -31,6 +31,9 @@ pub struct Sounds {
     pub dive_sound: Handle<AudioSource>,
     pub ocean_sound: Handle<AudioSource>,
     pub boost_sound: Handle<AudioSource>,
+    pub glass_sound: Handle<AudioSource>,
+    pub shatter_sound: Handle<AudioSource>,
+    pub land_sound: Handle<AudioSource>,
 }
 
 #[derive(Event)]

@@ -22,17 +22,12 @@ impl Plugin for GameOverPlugin {
     }
 }
 
-fn setup(
-    mut cmd: Commands,
-    text_resource: Res<TextResource>,
-    run_duration: Res<RunDuration>,
-    level_duration: Res<LevelDuration>,
-) {
+fn setup(mut cmd: Commands, text_resource: Res<TextResource>, run_duration: Res<RunDuration>) {
     layout(&mut cmd).with_children(|cmd| {
         cmd.spawn(NodeBuilder::new().get_card())
             .with_children(|cmd| {
                 header(cmd, &text_resource);
-                content(cmd, &text_resource, &run_duration, level_duration);
+                content(cmd, &text_resource, &run_duration);
                 actions(cmd, &text_resource);
             });
     });
@@ -92,15 +87,12 @@ fn content(
     cmd: &mut RelatedSpawnerCommands<'_, ChildOf>,
     text_resource: &Res<TextResource>,
     run_duration: &Res<RunDuration>,
-    level_duration: Res<LevelDuration>,
 ) {
-    let stopwatch = level_duration.into_inner();
     let secs = run_duration
         .results
         .iter()
         .map(|x| x.as_secs_f32())
-        .sum::<f32>()
-        + stopwatch.0.elapsed_secs();
+        .sum::<f32>();
 
     cmd.spawn((
         NodeBuilder::new().get_card(),
