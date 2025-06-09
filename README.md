@@ -65,7 +65,7 @@ The console has a bunch of commands:
 - Dive sound - [Underwater dive impact by Epic Stock Media][6]
 - Boost sound - [RasoolAsaad Pixabay Content License][13]
 - Glass break sound - [mccormick_iain (Freesound) Pixabay Content License][14]
-- Glass shatter sound - [u_3hzvwrt3hc Pixabay Content License][14]
+- Glass shatter sound - [u_3hzvwrt3hc Pixabay Content License][15]
 - Default Font - [Fira Mono by Carrois Apostrophe, The Mozilla Corporation and Telefonica S.A.  SIL Open Font License, Version 1.1][11]
 - Header Font - [The Cherry Bomb Project Authors][12]
 
@@ -83,4 +83,6 @@ The console has a bunch of commands:
 [11]:https://fonts.google.com/specimen/Fira+Mono
 [12]:https://github.com/satsuyako/CherryBomb
 [13]:https://pixabay.com/sound-effects/ui-sound-270349/
+[14]:https://pixabay.com/sound-effects/glass-break-3-102271/
+[15]:https://pixabay.com/sound-effects/glass-shatter-263962/
 
