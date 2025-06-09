@@ -3,10 +3,12 @@
 
 A skill-based movement game, inspired by Counter Strike Bhop/Surf community servers.
 
-![bevy_hop_gif](bevy_hop_gif.gif)
+![bevy_hop_screen](screen.png)
 
 Uses [`bevy_fps_controller`][9] for Source Engine inspired movement with [`Air Strafing/Bunny Hopping`][8]
 Air Strafing works by changing direction mid air, using synced mouse and strafe keys (`A`,`D`), while not using `W` and `S`.
+
+![bevy_hop_gif](bevy_hop_gif.gif)
 
 
 ### Controls
