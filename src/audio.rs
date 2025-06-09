@@ -17,16 +17,16 @@ impl Plugin for AudioPlugin {
     }
 }
 
-#[derive(Resource)]
-struct Sounds {
-    dive_sound: Handle<AudioSource>,
-    ocean_sound: Handle<AudioSource>,
-}
+fn setup(asset_server: Res<AssetServer>, mut cmd: Commands, mut loading: ResMut<AssetsLoading>) {
+    let ocean_sound = asset_server.load("ocean_sound/ocean.mp3");
+    let dive_sound = asset_server.load("dive_sound/dive.mp3");
 
-fn setup(asset_server: Res<AssetServer>, mut cmd: Commands) {
+    loading.0.push(ocean_sound.clone().into());
+    loading.0.push(dive_sound.clone().into());
+
     cmd.insert_resource(Sounds {
-        ocean_sound: asset_server.load("ocean_sound/ocean.mp3"),
-        dive_sound: asset_server.load("dive_sound/dive.mp3"),
+        ocean_sound,
+        dive_sound,
     });
 }
 
@@ -39,7 +39,7 @@ fn ocean_sound(mut cmd: Commands, sounds: Res<Sounds>) {
         AudioPlayer::new(sounds.ocean_sound.clone()),
         PlaybackSettings {
             mode: PlaybackMode::Loop,
-            volume: Volume::Linear(0.25),
+            volume: Volume::Linear(0.1),
             ..default()
         },
     ));

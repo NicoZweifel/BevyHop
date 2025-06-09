@@ -54,7 +54,7 @@ pub(super) fn setup_font(
     mut loading: ResMut<AssetsLoading>,
 ) {
     let default_font = asset_server.load("fira_mono.ttf");
-    let header_font = asset_server.load("Jua-Regular.ttf");
+    let header_font = asset_server.load("amatic_sc/AmaticSC-Regular.ttf");
 
     loading.0.push(default_font.clone().into());
     loading.0.push(header_font.clone().into());

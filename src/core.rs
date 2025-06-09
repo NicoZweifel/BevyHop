@@ -26,6 +26,12 @@ impl AssetsLoading {
     }
 }
 
+#[derive(Resource)]
+pub struct Sounds {
+    pub dive_sound: Handle<AudioSource>,
+    pub ocean_sound: Handle<AudioSource>,
+}
+
 #[derive(Event)]
 pub struct SpawnLevel(pub NonZeroUsize);
 
