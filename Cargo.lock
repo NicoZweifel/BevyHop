@@ -1110,7 +1110,7 @@ dependencies = [
 
 [[package]]
 name = "bevy_hop"
-version = "0.6.2"
+version = "0.7.0"
 dependencies = [
  "avian3d",
  "avian_pickup",
