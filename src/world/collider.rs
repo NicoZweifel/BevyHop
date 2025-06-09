@@ -226,7 +226,6 @@ fn boost_collision(
     ));
 
     cmd.spawn((
-        OceanSound,
         AudioPlayer::new(sounds.boost_sound.clone()),
         PlaybackSettings {
             mode: PlaybackMode::Despawn,

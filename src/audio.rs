@@ -42,7 +42,7 @@ fn ocean_sound(mut cmd: Commands, sounds: Res<Sounds>) {
         AudioPlayer::new(sounds.ocean_sound.clone()),
         PlaybackSettings {
             mode: PlaybackMode::Loop,
-            volume: Volume::Linear(0.1),
+            volume: Volume::Linear(0.2),
             ..default()
         },
     ));
@@ -64,7 +64,7 @@ fn dive_sound(
                 AudioPlayer::new(sounds.dive_sound.clone()),
                 PlaybackSettings {
                     mode: PlaybackMode::Despawn,
-                    volume: Volume::Linear(0.15),
+                    volume: Volume::Linear(0.1),
                     ..default()
                 },
             ));
