@@ -51,6 +51,7 @@ fn header(text_resource: &Res<TextResource>) -> impl Bundle {
             .with_direction(FlexDirection::Row)
             .with_grow(true)
             .with_align_items(AlignItems::Start)
+            .with_margin(UiRect::top(MARGIN))
             .with_justify_content(JustifyContent::SpaceAround)
             .get(),
         Pickable::IGNORE,
@@ -82,8 +83,8 @@ fn content(text_resource: &Res<TextResource>) -> impl Bundle {
         NodeBuilder::new()
             .with_grow(true)
             .with_direction(FlexDirection::Row)
-            .with_align_items(AlignItems::Center)
-            .with_margin(UiRect::all(MARGIN))
+            .with_align_items(AlignItems::End)
+            .with_margin(UiRect::all(MARGIN).with_bottom(MARGIN * 2.))
             .with_padding(UiRect::all(PADDING * 2.))
             .with_justify_content(JustifyContent::Center)
             .get(),
